@@ -54,3 +54,27 @@ GROUP BY
 | -----------        | -----------  |
 | customer_spend__c  | custid__c    |
 |                    | product__c   |
+
+
+Example: UnifiedIndividalID as a dimension, Calculate Count of email Opened for each Unified Individual
+
+```
+SELECT  COUNT( EmailEngagement__dlm.Id__c) as email_open_count__c,
+    UnifiedIndividual__dlm.Id__c as customer_id__c
+FROM 
+    EmailEngagement__dlm 
+JOIN 
+    IndividualIdentityLink__dlm 
+ON 
+    IndividualIdentityLink__dlm.SourceRecordId__c =  EmailEngagement__dlm.IndividualId__c
+    and EmailEngagement__dlm.EngagementChannelActionId__c ='Open'
+JOIN
+    UnifiedIndividual__dlm 
+ON
+    UnifiedIndividual__dlm. Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+GROUP BY 
+    customer_id__c
+```
+| Measure              | Dimension      |
+| -----------          | -----------    |
+| email_open_count__c  | customer_id__c |
