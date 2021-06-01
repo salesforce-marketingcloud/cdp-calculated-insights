@@ -6,7 +6,7 @@ Your metrics can include customer lifetime value (LTV), Most Viewed Categories, 
 
 This project containes example of creating Calculated Insights in Salesforce CDP
 
-Example # Calculate spend by the customer. Creates a measure customer_spend__c and a dimension custid__c
+Example #Calculate spend by the customer. Creates a measure customer_spend__c and a dimension custid__c
 
 | Measure            | Dimension   |
 | -----------        | ----------- |
