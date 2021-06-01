@@ -26,5 +26,31 @@ custid__c
 | customer_spend__c  | custid__c   |
 
 
-
-
+Example: **Calculate spend by the customer and product. Creates a measure customer_spend__c and two dimensions custid__c and product__c**
+```
+SELECT
+    SUM(SALESORDER__dlm.grand_total_amount__c ) as customer_spend__c,
+    PRODUCT__dlm.name__c as product__c,
+    Individual__dlm.Id__c as custid__c
+FROM
+    PRODUCT__dlm
+JOIN
+    SALESORDERPRODUCT__dlm
+    ON
+        PRODUCT__dlm.productid__c=SALESORDERPRODUCT__dlm.productid__c
+JOIN
+    SALESORDER__dlm
+    ON 
+        SALESORDER__dlm.orderid__c=SALESORDERPRODUCT__dlm.orderid__c
+JOIN
+    Individual__dlm
+    ON
+        SALESORDER__dlm.partyid__c= Individual__dlm.Id__c 
+GROUP BY
+    custid__c, 
+    product__c
+    ```
+| Measure            | Dimensions   |
+| -----------        | -----------  |
+| customer_spend__c  | custid__c    |
+|                    | product__c   |
