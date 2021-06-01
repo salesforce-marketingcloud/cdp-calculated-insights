@@ -1,5 +1,7 @@
 # Salesforce CDP: Calculated Insights Examples
 
+Salesforce CDP Calculated Insights Help (https://help.salesforce.com/articleView?id=sf.c360_a_calculated_insights.htm&type=5)
+
 The Calculated Insights feature lets you define and calculate multidimensional metrics from your entire digital state stored in Salesforce CDP
 
 Your metrics can include customer lifetime value (LTV), Most Viewed Categories, and customer satisfaction score (CSAT), Affinity Scores at the profile, segment, population level, or any other desired specialized metrics. Marketers can use Calculated Insights to define segment criteria and personalization attributes for activation using metrics, dimensions, and filters. 
