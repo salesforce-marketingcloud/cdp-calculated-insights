@@ -1,4 +1,4 @@
-# Salesforce CDP Calculated Insights
+# Salesforce CDP: Calculated Insights Example
 
 The Calculated Insights feature lets you define and calculate multidimensional metrics from your entire digital state stored in Salesforce CDP
 
@@ -78,3 +78,41 @@ GROUP BY
 | Measure              | Dimension      |
 | -----------          | -----------    |
 | email_open_count__c  | customer_id__c |
+
+Example: Recency Frequency and Monetary metrics 
+
+```
+SELECT sub2.cust_id__c as id__c, 
+    First(sub2.rfm_recency__c*100 + sub2.rfm_frequency__c*10 +sub2.rfm_monetary__c) as rfm_combined__c,
+    First(sub2.rfm_recency__c) as Recency__c,
+    First(sub2.rfm_frequency__c) as Frequency__c, 
+    First(sub2.rfm_monetary__c) as Monetary__c
+    From ( 
+        select UnifiedIndividual__dlm.Id__c as cust_id__c, 
+        ntile(4) over (order by MAX(SALESORDER__dlm.checkout_date__c)) as rfm_recency__c, 
+        ntile(4) over (order by count(SALESORDER__dlm.orderid__c)) as rfm_frequency__c, 
+        ntile(4) over (order by avg(SALESORDER__dlm.grand_total_amount__c)) as rfm_monetary__c 
+        FROM 
+        SALESORDER__dlm 
+            LEFT JOIN
+                IndividualIdentityLink__dlm
+            ON
+                SALESORDER__dlm.partyid__c=IndividualIdentityLink__dlm.SourceRecordId__c
+            LEFT Join
+                UnifiedIndividual__dlm
+            ON
+                UnifiedIndividual__dlm.Id__c=IndividualIdentityLink__dlm.UnifiedRecordId__c
+        GROUP BY 
+        cust_id__c 
+        ) as sub2 
+GROUP BY 
+sub2.cust_id__c
+
+```
+
+| Measure              | Dimension      |
+| -----------          | -----------    |
+| Recency__c           | cust_id__c     |
+| Frequency__c         |                |
+| Monetary__c          |                |
+| rfm_combined__c      |                |
