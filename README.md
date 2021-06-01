@@ -49,12 +49,12 @@ JOIN
 GROUP BY
     custid__c, 
     product__c
-    ```
+   
+```
 | Measure            | Dimensions   |
 | -----------        | -----------  |
 | customer_spend__c  | custid__c    |
 |                    | product__c   |
-
 
 Example: UnifiedIndividalID as a dimension, Calculate Count of email Opened for each Unified Individual
 
