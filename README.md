@@ -6,7 +6,7 @@ Your metrics can include customer lifetime value (LTV), Most Viewed Categories, 
 
 This project containes example of creating Calculated Insights in Salesforce CDP
 
-Example: **Calculate spend by the customer. Creates a measure customer_spend__c and a dimension custid__c**
+**Example: Calculate spend by the customer. Creates a measure customer_spend__c and a dimension custid__c**
 
 ```
 SELECT
@@ -26,7 +26,7 @@ custid__c
 | customer_spend__c  | custid__c   |
 
 
-Example: **Calculate spend by the customer and product. Creates a measure customer_spend__c and two dimensions custid__c and product__c**
+**Example: Calculate spend by the customer and product. Creates a measure customer_spend__c and two dimensions custid__c and product__c**
 ```
 SELECT
     SUM(SALESORDER__dlm.grand_total_amount__c ) as customer_spend__c,
@@ -56,7 +56,7 @@ GROUP BY
 | customer_spend__c  | custid__c    |
 |                    | product__c   |
 
-Example: UnifiedIndividalID as a dimension, Calculate Count of email Opened for each Unified Individual
+**Example: UnifiedIndividalID as a dimension, Calculate Count of email Opened for each Unified Individual**
 
 ```
 SELECT  COUNT( EmailEngagement__dlm.Id__c) as email_open_count__c,
@@ -79,7 +79,7 @@ GROUP BY
 | -----------          | -----------    |
 | email_open_count__c  | customer_id__c |
 
-Example: Recency Frequency and Monetary metrics 
+**Example: Recency Frequency and Monetary metrics** 
 
 ```
 SELECT sub2.cust_id__c as id__c, 
