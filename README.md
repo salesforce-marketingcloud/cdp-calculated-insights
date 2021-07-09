@@ -105,7 +105,7 @@ SELECT sub2.cust_id__c as id__c,
             ON
                 UnifiedIndividual__dlm.Id__c=IndividualIdentityLink__dlm.UnifiedRecordId__c
         GROUP BY 
-        cust_id__c 
+        UnifiedIndividual__dlm.Id__c 
         ) as sub2 
 GROUP BY 
 sub2.cust_id__c
@@ -144,7 +144,7 @@ SELECT
             ON
             UnifiedIndividual__dlm.Id__c=IndividualIdentityLink__dlm.UnifiedRecordId__c
         GROUP BY
-        customer_id__c
+        UnifiedIndividual__dlm.Id__c
         ) as NestedQuery
     Group BY 
     id__c
@@ -225,7 +225,7 @@ SELECT
                         ON
                         SALESORDER__dlm.partyid__c= Individual__dlm.Id__c 
                         group by
-                        individual_id__c, product_cat__c
+                        Individual__dlm.Id__c , product_cat__c
                 ) as SubQuery1
           ) as SubQuery2
 GROUP BY
