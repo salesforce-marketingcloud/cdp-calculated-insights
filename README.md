@@ -251,3 +251,39 @@ GROUP BY
  customer_id__c
 ```
 
+**Example: Using CASE statements** 
+
+```
+Select 
+  CASE WHEN SUM(S.no_hands_on_wheel_count__c) > 20 THEN 'Extremely Unsafe' WHEN SUM(S.no_hands_on_wheel_count__c) > 15 
+  and SUM(S.no_hands_on_wheel_count__c)<= 20 THEN 'Frequently Unsafe' WHEN SUM(S.no_hands_on_wheel_count__c) > 10 
+  and SUM(S.no_hands_on_wheel_count__c)<= 15 THEN 'Somewhat Unsafe' WHEN SUM(S.no_hands_on_wheel_count__c) > 5 
+  and SUM(S.no_hands_on_wheel_count__c)<= 10 THEN 'Somewhat Safe' WHEN SUM(S.no_hands_on_wheel_count__c) > 3 
+  and SUM(S.no_hands_on_wheel_count__c)<= 5 THEN 'Safe' WHEN SUM(S.no_hands_on_wheel_count__c) > 0 
+  and SUM(S.no_hands_on_wheel_count__c)<= 3 THEN 'Extremely Safe' end as driver_safety_score__c, 
+  S.customer_id__c as driver__c 
+FROM 
+  (
+    select 
+      COUNT(
+        VehicleTelematics__dlm.nohandsonwheel__c
+      ) as no_hands_on_wheel_count__c, 
+      UnifiedIndividual__dlm.ssot__Id__c as customer_id__c 
+    FROM 
+      VehicleTelematics__dlm 
+      join Vehicle__dlm on (
+        VehicleTelematics__dlm.vehicleid__c = Vehicle__dlm.id__c
+      ) 
+      left outer join IndividualIdentityLink__dlm on (
+        VehicleTelematics__dlm.maid__c = IndividualIdentityLink__dlm.SourceRecordId__c
+      ) 
+      join UnifiedIndividual__dlm on (
+        IndividualIdentityLink__dlm.UnifiedRecordId__c = UnifiedIndividual__dlm.ssot__Id__c
+      ) 
+    group by 
+      UnifiedIndividual__dlm.ssot__Id__c
+  ) as S 
+Group by 
+  S.customer_id__c
+
+```
