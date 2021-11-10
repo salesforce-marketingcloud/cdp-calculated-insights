@@ -238,11 +238,16 @@ Category__c
 | Affinity__c          | Customer_Id__c |
 |                      | Category__c    |
 
-** Using NOT IN operator **
+**Example: Using NOT IN operator** 
+
 ```
-select avg( ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c ) as avg__c, ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c as customer_id__c 
-from 
-ssot__SalesOrder__dlm where ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c NOT IN (select ssot__Individual__dlm.ssot__Id__c as Id from ssot__Individual__dlm where ssot__Individual__dlm.ssot__ChildrenCount__c <2 ) group by
+SELECT 
+    avg( ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c ) as avg__c, ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c as customer_id__c 
+FROM 
+    ssot__SalesOrder__dlm where ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c NOT IN (select ssot__Individual__dlm.ssot__Id__c as Id from ssot__Individual__dlm 
+WHERE 
+    ssot__Individual__dlm.ssot__ChildrenCount__c <2 ) 
+GROUP BY
  customer_id__c
 ```
 
