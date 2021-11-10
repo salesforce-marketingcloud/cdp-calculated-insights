@@ -190,7 +190,7 @@ GROUP BY
 | spend_bucket__c      | custid__c      |
 | spend__c             | product__c     |
 
-**Example: Find Product category buying affinity for the each customer** 
+**Example: Find Product  category buying affinity for the each customer** 
 ```
 SELECT
     FIRST(SubQuery2.highest_purcahased_rank__c) as Affinity__c,
@@ -237,3 +237,12 @@ Category__c
 | -----------          | -----------    |
 | Affinity__c          | Customer_Id__c |
 |                      | Category__c    |
+
+** Using NOT IN operator **
+```
+select avg( ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c ) as avg__c, ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c as customer_id__c 
+from 
+ssot__SalesOrder__dlm where ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c NOT IN (select ssot__Individual__dlm.ssot__Id__c as Id from ssot__Individual__dlm where ssot__Individual__dlm.ssot__ChildrenCount__c <2 ) group by
+ customer_id__c
+```
+
