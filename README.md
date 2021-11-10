@@ -287,3 +287,26 @@ Group by
   S.customer_id__c
 
 ```
+
+
+**Example: Using Streaming Insights with 5 minute aggregations** 
+
+```
+SELECT 
+  SUM(
+    MobileApp_RT_Events__dlm.productPurchaseWeb_orderQuanity__c
+  ) as order_placed__c, 
+  MobileApp_RT_Events__dlm.AddToCartWeb_productId__c as product__c, 
+  WINDOW.START as start__c, 
+  WINDOW.END as end__c 
+FROM 
+  MobileApp_RT_Events__dlm 
+GROUP BY 
+  window(
+    MobileApp_RT_Events__dlm.dateTime__c, 
+    '5 MINUTE'
+  ), 
+  MobileApp_RT_Events__dlm.AddToCartWeb_productId__c
+
+
+```
