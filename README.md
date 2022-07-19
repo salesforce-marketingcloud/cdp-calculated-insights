@@ -1,25 +1,60 @@
-# Salesforce CDP: Calculated Insights Examples
+# Salesforce Customer Data Platform: Calculated Insights Examples
 
-Salesforce CDP Calculated Insights Help (https://help.salesforce.com/articleView?id=sf.c360_a_calculated_insights.htm&type=5)
+*See the Salesforce Customer Data Platform (CDP) [Calculated Insights Help Section](https://help.salesforce.com/articleView?id=sf.c360_a_calculated_insights.htm&type=5) and [Trails on Trailhead](https://help.salesforce.com/s/search-result?language=en_US#q=calculated%20insights%20customer%20data%20platform&t=allResultsTab&sort=relevancy&f:@objecttype=[Trailhead]&f:@sflanguage=[en_US) for more details*
 
-The Calculated Insights feature lets you define and calculate multidimensional metrics from your entire digital state stored in Salesforce CDP
+**Overview**
 
-Your metrics can include customer lifetime value (LTV), Most Viewed Categories, and customer satisfaction score (CSAT), Affinity Scores at the profile, segment, population level, or any other desired specialized metrics. Marketers can use Calculated Insights to define segment criteria and personalization attributes for activation using metrics, dimensions, and filters. 
+The Calculated Insights feature lets you define and calculate multidimensional metrics from your entire digital state stored in Salesforce CDP.
 
-This project containes examples of creating Calculated Insights in Salesforce CDP
+Your metrics can include Customer Lifetime Value (LTV), Most Viewed Categories, Customer Satisfaction Score (CSAT), Affinity Scores at the profile level, or any other desired specialized metrics. Marketers can use Calculated Insights to define segment criteria and personalization attributes for activation using metrics, dimensions, and filters. 
 
-**Example: Calculate spend by the customer. Creates a measure customer_spend__c and a dimension custid__c**
+*This file contains query examples that can be used as templates when creating Calculated Insights in Salesforce CDP.*
+
+Attached is a PDF file called "Data Schema" that shows the data relationships for Engagement and Order/Transaction tables used for some of the queries below. It is noted below the summary of each query whether it corresponds to this data schema specifically.
+
+***Table of Contents***
+
+*Example Queries: Beginner Complexity Level*
+* Spend by Customer
+* Spend by Customer and Product
+* Count of Emails Opened for Each Unified Individual
+* Recency, Frequency, and Monetary (RFM) Metrics for Each Unified Individual without Customer Buckets
+* Lifetime Value (LTV) for Each Unified Individual
+* Purchase Insights for Each Unified Individual
+* Customer Rank by Spend for Each Unified Individual
+* Customer Rank by Category Spend for Each Unified Individual
+* Customer Rank by Category Purchase Count for Each Unified Individual
+* Customer Rank by Category Item Purchase Count for Each Unified Individual  
+
+*Useful Function Examples*
+
+* Using NOT IN and WHERE Operators
+* Using CASE Statements
+* Using Streaming Insights with 5 Minute Aggregations  
+
+*Example Queries: Intermediate to Advanced Complexity Level*
+
+* Recency, Frequency, and Monetary (RFM) Metrics for Each Unified Individual with Customer Buckets
+* Email Engagement Customer Buckets for Each Unified Individual
+* Social Channel Affinity for Each Unified Individual
+
+
+***Example Queries***
+
+**Spend by Customer**  
+
+*Creates a dimension based on the Individual ID and a measure Customer Spend*
 
 ```
 SELECT
-    SUM( SALESORDER__dlm.grand_total_amount__c ) as customer_spend__c,
+    SUM(SALESORDER__dlm.grand_total_amount__c) as customer_spend__c,
     Individual__dlm.Id__c as custid__c
 FROM
     SALESORDER__dlm
 JOIN
     Individual__dlm
 ON
-    SALESORDER__dlm.partyid__c= Individual__dlm.Id__c 
+    SALESORDER__dlm.partyid__c = Individual__dlm.Id__c 
 GROUP BY
 custid__c
 ```
@@ -28,7 +63,10 @@ custid__c
 | customer_spend__c  | custid__c   |
 
 
-**Example: Calculate spend by the customer and product. Creates a measure customer_spend__c and two dimensions custid__c and product__c**
+**Spend by Customer and Product**  
+
+*Creates a measure Customer Spend, a dimension based on Individual ID, and a dimension based on product name*
+
 ```
 SELECT
     SUM(SALESORDER__dlm.grand_total_amount__c ) as customer_spend__c,
@@ -51,17 +89,19 @@ JOIN
 GROUP BY
     custid__c, 
     product__c
-   
 ```
 | Measure            | Dimensions   |
 | -----------        | -----------  |
 | customer_spend__c  | custid__c    |
 |                    | product__c   |
 
-**Example: UnifiedIndividalID as a dimension, Calculate Count of email Opened for each Unified Individual**
+
+**Count of Emails Opened for Each Unified Individual**  
+
+*Creates a dimension Unified Individal ID and a measure Email Open Count*
 
 ```
-SELECT  COUNT( EmailEngagement__dlm.Id__c) as email_open_count__c,
+SELECT COUNT( EmailEngagement__dlm.Id__c) as email_open_count__c,
     UnifiedIndividual__dlm.Id__c as customer_id__c
 FROM 
     EmailEngagement__dlm 
@@ -81,7 +121,12 @@ GROUP BY
 | -----------          | -----------    |
 | email_open_count__c  | customer_id__c |
 
-**Example: Recency Frequency and Monetary metrics** 
+
+**Recency, Frequency, and Monetary (RFM) Metrics for Each Unified Individual without Customer Buckets**  
+
+*Creates a dimension Unified Individual ID and three measures for RFM as well as a measure for the combined RFM score*  
+
+*See below for another version of this query that includes Customer Buckets based on RFM score called "Recency, Frequency, and Monetary (RFM) Metrics for Each Unified Individual with Customer Buckets"
 
 ```
 SELECT sub2.cust_id__c as id__c, 
@@ -109,10 +154,8 @@ SELECT sub2.cust_id__c as id__c,
         ) as sub2 
 GROUP BY 
 sub2.cust_id__c
-
 ```
-
-| Measure              | Dimension      |
+| Measures             | Dimension      |
 | -----------          | -----------    |
 | Recency__c           | cust_id__c     |
 | Frequency__c         |                |
@@ -120,125 +163,298 @@ sub2.cust_id__c
 | rfm_combined__c      |                |
 
 
-**Example: Email Open Rates and Click Rates by Unified Individual** 
+**Lifetime Value (LTV) for Each Unified Individual**  
 
-```
-SELECT 
-    SUM(NestedQuery.EmailOpen__c)/SUM(NestedQuery.EmailSend__c)*100 as Open_Rate__c,
-    SUM(NestedQuery.EmailClick__c)/SUM(NestedQuery.EmailSend__c)*100 as Click_Rate__c,
-    NestedQuery.customer_id__c as id__c
-    FROM
-        (
-            SELECT COUNT (CASE WHEN EmailEngagement__dlm.EngagementChannelActionId__c = 'Open' THEN 1 ELSE 0 end) as EmailOpen__c,
-            COUNT (CASE WHEN EmailEngagement__dlm.EngagementChannelActionId__c = 'Click' THEN 1 ELSE 0 end) as EmailClick__c,
-            COUNT (CASE WHEN EmailEngagement__dlm.EngagementChannelActionId__c = 'Send' THEN 1 ELSE 0 end) as EmailSend__c,
-            UnifiedIndividual__dlm.Id__c as customer_id__c
-        FROM
-            EmailEngagement__dlm
-            LEFT JOIN
-            IndividualIdentityLink__dlm
-            ON
-            EmailEngagement__dlm.IndividualId__c=IndividualIdentityLink__dlm.SourceRecordId__c
-            LEFT Join
-            UnifiedIndividual__dlm
-            ON
-            UnifiedIndividual__dlm.Id__c=IndividualIdentityLink__dlm.UnifiedRecordId__c
-        GROUP BY
-        UnifiedIndividual__dlm.Id__c
-        ) as NestedQuery
-    Group BY 
-    id__c
-```
-| Measure              | Dimension      |
-| -----------          | -----------    |
-| Open_Rate__c         | id__c          |
-| Click_Rate__c        |                |
+*Creates dimensions Unified Individual ID, Purchase Hour, Product related dimensions such as Product Category, and Sales related dimensions such as Sales Channel. Creates dimension LTV based on the SUM of Grand Total Sales*  
 
-**Example: Bucket customers (High Medium, low spenders) based on spend and by product** 
+*This query corresponds to the data schema in the attached PDF
+
 ```
 SELECT
-    CASE
-        WHEN    
-            SUM( SALESORDER__dlm.grand_total_amount__c ) < 100 THEN 'Low Spender'
-        WHEN
-            SUM( SALESORDER__dlm.grand_total_amount__c ) >100 AND  SUM( SALESORDER__dlm.grand_total_amount__c )<=500  THEN 'Medium Spender' 
-        WHEN 
-            SUM( SALESORDER__dlm.grand_total_amount__c ) >500 then 'High Spender' end as spend_bucket__c,
-            SUM(SALESORDER__dlm.grand_total_amount__c ) as spend__c,
-            PRODUCT__dlm.name__c as product__c,
-            Individual__dlm.Id__c as custid__c
-    FROM
-    PRODUCT__dlm
-    JOIN
-        SALESORDERPRODUCT__dlm
-    ON 
-        PRODUCT__dlm.productid__c=SALESORDERPRODUCT__dlm.productid__c
-    JOIN
-        SALESORDER__dlm
-    ON 
-        SALESORDER__dlm.orderid__c=SALESORDERPRODUCT__dlm.orderid__c
-    LEFT JOIN
-        Individual__dlm
-    ON
-        SALESORDER__dlm.partyid__c= Individual__dlm.Id__c 
+  SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) as LTV__c,
+  UnifiedIndividual__dlm.ssot__Id__c as CustomerId__c,
+  CDPHour(ssot__SalesOrder__dlm.ssot__PurchaseOrderDate__c) as PurchaseHour__c,
+  ssot__GoodsProduct__dlm.Category__c as ProductCategory__c,
+  ssot__SalesOrder__dlm.ssot__SalesChannelId__c as SalesChannel__c,
+  ssot__SalesOrder__dlm.ssot__SalesStoreId__c as SalesStore__c,
+  ssot__GoodsProduct__dlm.Subcategory__c as ProductSubCategory__c,
+  ssot__GoodsProduct__dlm.Product_Name__c as ProductName__c,
+  ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c 
+FROM
+  ssot__SalesOrder__dlm 
+  LEFT JOIN
+    IndividualIdentityLink__dlm 
+    ON ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c = IndividualIdentityLink__dlm.SourceRecordId__c 
+  LEFT JOIN
+    UnifiedIndividual__dlm 
+    ON IndividualIdentityLink__dlm.UnifiedRecordId__c = UnifiedIndividual__dlm.ssot__Id__c 
+  LEFT JOIN
+    ssot__SalesOrderProduct__dlm 
+    on ssot__SalesOrderProduct__dlm.ssot__SalesOrderId__c = ssot__SalesOrder__dlm.ssot__OrderNumber__c 
+  LEFT Join
+    ssot__GoodsProduct__dlm 
+    on ssot__SalesOrderProduct__dlm.ssot__ProductId__c = ssot__GoodsProduct__dlm.ssot__ProductSKU__c 
 GROUP BY
-        custid__c, 
-        product__c
+  PurchaseHour__c,
+  ProductCategory__c,
+  CustomerId__c,
+  SalesChannel__c,
+  SalesStore__c,
+  ProductSubCategory__c,
+  ProductName__c,
+  Brand__c
 ```
-| Measure              | Dimension      |
-| -----------          | -----------    |
-| spend_bucket__c      | custid__c      |
-| spend__c             | product__c     |
+| Measure              | Dimensions           |
+| -----------          | -----------          |
+| LTV__c               | PurchaseHour__c      |   
+|                      | ProductCategory__c   |
+|                      | CustomerId__c        |
+|                      | SalesChannel__c      |
+|                      | SalesStore__c        |
+|                      | ProductSubCategory__c|
+|                      | ProductName__c       |
+|                      | Brand__c             |
 
-**Example: Find Product  category buying affinity for the each customer** 
+
+**Purchase Insights for Each Unified Individual**  
+
+*Creates a dimension Unified Individual ID, Time Period based on the hour of purchase, product related dimensions such as Product Category, sales related dimensions such as Sales Channel. Creates measures such as Total Spend, Average Order Amount, Total Number of Orders, Lowest Order Amount, and Highest Order Amount*  
+
+*This query corresponds to the data schema in the attached PDF
+
 ```
 SELECT
-    FIRST(SubQuery2.highest_purcahased_rank__c) as Affinity__c,
-    SubQuery2.CustomerId__c as Customer_Id__c,
-    SubQuery2.product__c as Category__c
-        FROM
-            (
-            SELECT
-            RANK() OVER ( PARTITION BY SubQuery1.individual_id__c
-            order by (SubQuery1.product_purchase_count__c) desc )
-            as highest_purcahased_rank__c,
-            SubQuery1.individual_id__c as CustomerId__c,
-            SubQuery1.product_cat__c as product__c
-            FROM
-                (
-                SELECT
-                   Individual__dlm.Id__c   as individual_id__c,
-                   PRODUCT__dlm.product_category__c   as product_cat__c,
-                   COUNT( PRODUCT__dlm.product_sk_u__c ) as product_purchase_count__c
-                   FROM
-                        PRODUCT__dlm
-                        JOIN
-                        SALESORDERPRODUCT__dlm
-                        ON 
-                        PRODUCT__dlm.productid__c=SALESORDERPRODUCT__dlm.productid__c
-                        JOIN
-                        SALESORDER__dlm
-                        ON
-                        SALESORDER__dlm.orderid__c=SALESORDERPRODUCT__dlm.orderid__c
-                        JOIN
-                        Individual__dlm
-                        ON
-                        SALESORDER__dlm.partyid__c= Individual__dlm.Id__c 
-                        group by
-                        Individual__dlm.Id__c , product_cat__c
-                ) as SubQuery1
-          ) as SubQuery2
+  SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) as TotalSpend__c,
+  AVG(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) as AvgOrderAmount__c,
+  COUNT(ssot__SalesOrder__dlm.ssot__Id__c) as TotalOrders__c,
+  MIN(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) as LowestOrderAmount__c,
+  MAX(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) as HighestOrderAmount__c,
+  CDPHour(ssot__SalesOrder__dlm.ssot__PurchaseOrderDate__c) as TimePeriod__c,
+  UnifiedIndividual__dlm.ssot__Id__c as CustomerId__c,
+  ssot__SalesOrder__dlm.ssot__SalesChannelId__c as SalesChannel__c,
+  ssot__SalesOrder__dlm.Payment_Method__c as PaymentMethod__c,
+  ssot__SalesOrder__dlm.ssot__SalesStoreId__c as SalesStore__c,
+  ssot__GoodsProduct__dlm.Category__c as ProductCategory__c,
+  ssot__GoodsProduct__dlm.Subcategory__c as ProductSubCategory__c,
+  ssot__GoodsProduct__dlm.Product_Name__c as ProductName__c,
+  ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c 
+FROM
+  ssot__SalesOrder__dlm 
+  LEFT JOIN
+    IndividualIdentityLink__dlm 
+    ON ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c = IndividualIdentityLink__dlm.SourceRecordId__c 
+  LEFT JOIN
+    UnifiedIndividual__dlm 
+    ON IndividualIdentityLink__dlm.UnifiedRecordId__c = UnifiedIndividual__dlm.ssot__Id__c 
+  LEFT JOIN
+    ssot__SalesOrderProduct__dlm 
+    on ssot__SalesOrderProduct__dlm.ssot__SalesOrderId__c = ssot__SalesOrder__dlm.ssot__OrderNumber__c 
+  LEFT Join
+    ssot__GoodsProduct__dlm 
+    on ssot__SalesOrderProduct__dlm.ssot__ProductId__c = ssot__GoodsProduct__dlm.ssot__ProductSKU__c 
 GROUP BY
-Customer_Id__c, 
-Category__c
+  CustomerId__c,
+  SalesChannel__c,
+  PaymentMethod__c,
+  SalesStore__c,
+  ProductCategory__c,
+  ProductSubCategory__c,
+  ProductName__c,
+  TimePeriod__c,
+  Brand__c
 ```
+| Measures             | Dimensions           |
+| -----------          | -----------          |
+| TotalSpend__c        | CustomerId__c        |
+| AvgOrderAmount__c    | SalesChannel__c      |
+| TotalOrders__c       | PaymentMethod__c     |
+| LowestOrderAmount__c | SalesStore__c        |
+| HighestOrderAmount__c| SalesStore__c        |
+|                      | ProductCategory__c   |
+|                      | ProductSubCategory__c|
+|                      | ProductName__c       |
+|                      | TimePeriod__c        |
+|                      | Brand__c             |
 
-| Measure              | Dimension      |
-| -----------          | -----------    |
-| Affinity__c          | Customer_Id__c |
-|                      | Category__c    |
 
-**Example: Using NOT IN operator** 
+**Customer Rank by Spend for Each Unified Individual**  
+
+*Creates a dimension Unified Individual ID. Creates three rank measures based on the total sales amount. The measures are Customer Rank based on Row Number, Customer Rank based on the rank function, and Customer Dense Rank based on the dense rank function*  
+
+*See below for a version of this query where you can segment by Product Category  
+
+*This query corresponds to the data schema in the attached PDF
+
+```
+SELECT
+  UnifiedIndividual__dlm.ssot__Id__c AS Unified_Individual__c,
+  ROW_NUMBER() OVER ( 
+ORDER BY
+  SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) desc) AS Customer_Rank__c,
+  DENSE_RANK() OVER ( 
+ORDER BY
+  SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) desc) AS Customer_Stat_Dense_Rank__c,
+  RANK() OVER ( 
+ORDER BY
+  SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) desc) AS Customer_Stat_Rank__c 
+FROM
+  UnifiedIndividual__dlm 
+  INNER JOIN
+    IndividualIdentityLink__dlm 
+    ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+  INNER JOIN
+    ssot__SalesOrder__dlm 
+    ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c 
+  LEFT JOIN
+    ssot__SalesOrderProduct__dlm 
+    on ssot__SalesOrder__dlm.ssot__Id__c = ssot__SalesOrderProduct__dlm.ssot__SalesOrderId__c 
+GROUP BY
+  Unified_Individual__c
+```
+| Measure                    | Dimension            |
+| -----------                | -----------          |
+| Customer_Rank__c           | Unified_Individual__c|
+| Customer_Stat_Dense_Rank__c|                      |
+| Customer_Stat_Rank__c      |                      |
+
+
+**Customer Rank by Category Spend for Each Unified Individual**  
+
+*This is the same as Customer Rank by Spend, but adds a dimension for Product Category. Creates a dimension Unified Individual ID and Product Category. Creates three rank measures based on the total sales amount. The measures are Customer Rank based on Row Number, Customer Rank based on the rank function, and Customer Dense Rank based on the dense rank function. Note that all dimensions must be selected in segmentation when using complex queries such as Row Number and Rank/Dense Rank*  
+
+*This query corresponds to the data schema in the attached PDF
+
+```
+SELECT
+  UnifiedIndividual__dlm.ssot__Id__c AS Unified_Individual__c,
+  ROW_NUMBER() OVER ( 
+ORDER BY
+  SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) desc) AS Customer_Rank__c,
+  DENSE_RANK() OVER ( 
+ORDER BY
+  SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) desc) AS Customer_Stat_Dense_Rank__c,
+  RANK() OVER ( 
+ORDER BY
+  SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) desc) AS Customer_Stat_Rank__c,
+  ssot__GoodsProduct__dlm.Category__c AS Product_Category__c 
+FROM
+  UnifiedIndividual__dlm 
+  INNER JOIN
+    IndividualIdentityLink__dlm 
+    ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+  INNER JOIN
+    ssot__SalesOrder__dlm 
+    ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c 
+  LEFT JOIN
+    ssot__SalesOrderProduct__dlm 
+    on ssot__SalesOrder__dlm.ssot__Id__c = ssot__SalesOrderProduct__dlm.ssot__SalesOrderId__c 
+  LEFT Join
+    ssot__GoodsProduct__dlm 
+    on ssot__SalesOrderProduct__dlm.ssot__ProductId__c = ssot__GoodsProduct__dlm.ssot__Id__c 
+GROUP BY
+  Unified_Individual__c,
+  Product_Category__c
+```
+| Measures                   | Dimensions           |
+| -----------                | -----------          |
+| Customer_Rank__c           | Unified_Individual__c|
+| Customer_Stat_Rank__c      | Product_Category__c  |
+| Customer_Stat_Dense_Rank__c|                      |
+
+
+**Customer Rank by Category Purchase Count for Each Unified Individual**  
+
+*Creates a dimension Unified Individual ID and Product Category. Creates three rank measures based on the count of sales orders. The measures are Customer Rank based on Row Number, Customer Rank based on the rank function, and Customer Dense Rank based on the dense rank function. Note that all dimensions must be selected in segmentation when using complex queries such as Row Number and Rank/Dense Rank*  
+
+*This query corresponds to the data schema in the attached PDF
+
+```
+SELECT
+  UnifiedIndividual__dlm.ssot__Id__c AS Unified_Individual__c,
+  ROW_NUMBER() OVER ( 
+ORDER BY
+  COUNT(ssot__SalesOrder__dlm.ssot__Id__c) desc) AS Customer_Rank__c,
+  DENSE_RANK() OVER ( 
+ORDER BY
+  COUNT(ssot__SalesOrder__dlm.ssot__Id__c) desc) AS Customer_Stat_Dense_Rank__c,
+  RANK() OVER ( 
+ORDER BY
+  COUNT(ssot__SalesOrder__dlm.ssot__Id__c) desc) AS Customer_Stat_Rank__c,
+  ssot__GoodsProduct__dlm.Category__c AS Product_Category__c 
+FROM
+  UnifiedIndividual__dlm 
+  INNER JOIN
+    IndividualIdentityLink__dlm 
+    ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+  INNER JOIN
+    ssot__SalesOrder__dlm 
+    ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c 
+  LEFT JOIN
+    ssot__SalesOrderProduct__dlm 
+    on ssot__SalesOrder__dlm.ssot__Id__c = ssot__SalesOrderProduct__dlm.ssot__SalesOrderId__c 
+  LEFT Join
+    ssot__GoodsProduct__dlm 
+    on ssot__SalesOrderProduct__dlm.ssot__ProductId__c = ssot__GoodsProduct__dlm.ssot__Id__c 
+GROUP BY
+  Unified_Individual__c,
+  Product_Category__c
+```
+| Measures                   | Dimensions           |
+| -----------                | -----------          |
+| Customer_Rank__c           | Unified_Individual__c|
+| Customer_Stat_Rank__c      | Product_Category__c  |
+| Customer_Stat_Dense_Rank__c|                      |
+
+
+**Customer Rank by Category Item Purchase Count for Each Unified Individual**  
+
+*Creates a dimension Unified Individual ID and Product Category. Creates three rank measures based on the count of Product SKUs purchased. The measures are Customer Rank based on Row Number, Customer Rank based on the rank function, and Customer Dense Rank based on the dense rank function. Note that all dimensions must be selected in segmentation when using complex queries such as Row Number and Rank/Dense Rank*  
+
+*This query corresponds to the data schema in the attached PDF
+
+```
+SELECT
+  UnifiedIndividual__dlm.ssot__Id__c AS Unified_Individual__c,
+  ROW_NUMBER() OVER ( 
+ORDER BY
+  COUNT(ssot__GoodsProduct__dlm.ssot__ProductSKU__c) desc) AS Customer_Rank__c,
+  DENSE_RANK() OVER ( 
+ORDER BY
+  COUNT(ssot__GoodsProduct__dlm.ssot__ProductSKU__c) desc) AS Customer_Stat_Dense_Rank__c,
+  RANK() OVER ( 
+ORDER BY
+  COUNT(ssot__GoodsProduct__dlm.ssot__ProductSKU__c) desc) AS Customer_Stat_Rank__c,
+  ssot__GoodsProduct__dlm.Category__c AS Product_Category__c 
+FROM
+  UnifiedIndividual__dlm 
+  INNER JOIN
+    IndividualIdentityLink__dlm 
+    ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+  INNER JOIN
+    ssot__SalesOrder__dlm 
+    ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c 
+  LEFT JOIN
+    ssot__SalesOrderProduct__dlm 
+    on ssot__SalesOrder__dlm.ssot__Id__c = ssot__SalesOrderProduct__dlm.ssot__SalesOrderId__c 
+  LEFT Join
+    ssot__GoodsProduct__dlm 
+    on ssot__SalesOrderProduct__dlm.ssot__ProductId__c = ssot__GoodsProduct__dlm.ssot__Id__c 
+GROUP BY
+  Unified_Individual__c,
+  Product_Category__c
+```
+| Measures                   | Dimensions           |
+| -----------                | -----------          |
+| Customer_Rank__c           | Unified_Individual__c|
+| Customer_Stat_Rank__c      | Product_Category__c  |
+| Customer_Stat_Dense_Rank__c|                      |
+
+
+**Using NOT IN and WHERE Operators**  
+
+*Creates a dimension Unified Individual ID and a measure of average grand total sales where the Sales Order Customer ID is "NOT IN" the Individual table*  
+
+*This query corresponds to the data schema in the attached PDF
 
 ```
 SELECT 
@@ -246,12 +462,18 @@ SELECT
 FROM 
     ssot__SalesOrder__dlm where ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c NOT IN (select ssot__Individual__dlm.ssot__Id__c as Id from ssot__Individual__dlm 
 WHERE 
-    ssot__Individual__dlm.ssot__ChildrenCount__c <2 ) 
+    ssot__Individual__dlm.Loyalty_Reward_Points__c > 10 ) 
 GROUP BY
  customer_id__c
 ```
+| Measure              | Dimension      |
+| -----------          | -----------    |
+| avg__c               | customer_id__c | 
 
-**Example: Using CASE statements** 
+
+**Using CASE Statements**  
+
+*Creates a dimension Unified Individual ID and a bucket created with the CASE function that is based on a driver's safety level depending on how many times they didn't have their hands on the steering wheel*
 
 ```
 Select 
@@ -284,21 +506,25 @@ FROM
       UnifiedIndividual__dlm.ssot__Id__c
   ) as S 
 Group by 
-  S.customer_id__c
-
+  driver__c
 ```
+| Measure               | Dimension      |
+| -----------           | -----------    |
+| driver_safety_score__c| driver__c      |
 
 
-**Example: Using Streaming Insights with 5 minute aggregations** 
+**Using Streaming Insights with 5 Minute Aggregations**  
+
+*Creates dimensions Mobile app product ID and Mobile app events that occur in 5 minute windows. Measures are the SUM of order quantity as well as window start and window end*
 
 ```
 SELECT 
   SUM(
-    MobileApp_RT_Events__dlm.productPurchaseWeb_orderQuanity__c
+    MobileApp_RT_Events__dlm.productPurchaseWeb_orderQuantity__c
   ) as order_placed__c, 
   MobileApp_RT_Events__dlm.AddToCartWeb_productId__c as product__c, 
-  WINDOW.START as start__c, 
-  WINDOW.END as end__c 
+  WINDOW.START as windowstart__c, 
+  WINDOW.END as windowend__c 
 FROM 
   MobileApp_RT_Events__dlm 
 GROUP BY 
@@ -306,7 +532,461 @@ GROUP BY
     MobileApp_RT_Events__dlm.dateTime__c, 
     '5 MINUTE'
   ), 
-  MobileApp_RT_Events__dlm.AddToCartWeb_productId__c
+  product__c
+```
+| Measures              | Dimension      |
+| -----------           | -----------    |
+| order_placed__c       | product__c     |
+|                       | windowstart__c |
+|                       | windowend__c   |
 
+
+**Recency, Frequency, and Monetary (RFM) Metrics for Each Unified Individual with Customer Buckets**  
+
+*Creates a dimension Unified Individual ID and a Customer Bucket based on RFM score. Creates three measures for RFM as well as a measure for the combined RFM score*  
+
+*This query corresponds to the data schema in the attached PDF
 
 ```
+SELECT
+  sub2.CustomerId__c as CustomerId__c,
+  CASE
+    WHEN
+      Max(sub2.rfm_recency__c*100 + sub2.rfm_frequency__c*10 + sub2.rfm_monetary__c) = 111 
+    THEN
+      'Best Customers' 
+    WHEN
+      Max(sub2.rfm_recency__c*100 + sub2.rfm_frequency__c*10 + sub2.rfm_monetary__c) = 141 
+    THEN
+      'New Spenders' 
+    WHEN
+      Max(sub2.rfm_recency__c*100 + sub2.rfm_frequency__c*10 + sub2.rfm_monetary__c) = 311 
+    THEN
+      'Almost Lost' 
+    WHEN
+      Max(sub2.rfm_recency__c*100 + sub2.rfm_frequency__c*10 + sub2.rfm_monetary__c) = 411 
+    THEN
+      'Lost Customers' 
+    WHEN
+      Max(sub2.rfm_recency__c*100 + sub2.rfm_frequency__c*10 + sub2.rfm_monetary__c) = 444 
+    THEN
+      'Lost Low Value Customers' 
+    WHEN
+      Max(sub2.rfm_frequency__c*10 + sub2.rfm_monetary__c) = 14 
+    THEN
+      'Loyal Joes and Janes' 
+    WHEN
+      Max(sub2.rfm_frequency__c*10 + sub2.rfm_monetary__c) = 41 
+    THEN
+      'Splurgers' 
+    WHEN
+      Max(sub2.rfm_frequency__c) = 1 
+    THEN
+      'Loyal Customers' 
+    WHEN
+      Max(sub2.rfm_monetary__c) = 1 
+    THEN
+      'Big Spenders' 
+    Else
+      'Others' 
+  END
+  as RFM_SegmentName__c, Max(sub2.rfm_recency__c*100 + sub2.rfm_frequency__c*10 + sub2.rfm_monetary__c) as RFM_Combined__c, Max(sub2.rfm_recency__c) as Recency__c, Max(sub2.rfm_frequency__c) as Frequency__c, Max(sub2.rfm_monetary__c) as Monetary__c 
+From
+  (
+    SELECT
+      UnifiedIndividual__dlm.ssot__Id__c as CustomerId__c,
+      ntile(4) over (
+    order by
+      MAX(ssot__SalesOrder__dlm.ssot__PurchaseOrderDate__c)) as rfm_recency__c,
+      ntile(4) over (
+    order by
+      count(ssot__SalesOrder__dlm.ssot__Id__c) DESC) as rfm_frequency__c,
+      ntile(4) over (
+    order by
+      SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) DESC) as rfm_monetary__c 
+    FROM
+      UnifiedIndividual__dlm 
+      LEFT JOIN
+        IndividualIdentityLink__dlm 
+        ON IndividualIdentityLink__dlm.UnifiedRecordId__c = UnifiedIndividual__dlm.ssot__Id__c 
+      LEFT Join
+        ssot__SalesOrder__dlm 
+        ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__SalesOrder__dlm.ssot__SoldToCustomerId__c 
+    GROUP BY
+      UnifiedIndividual__dlm.ssot__Id__c 
+  )
+  as sub2 
+GROUP BY
+  CustomerId__c
+```
+| Measure              | Dimension      |
+| -----------          | -----------    |
+| RFM_SegmentName__c   | CustomerId__c  |
+| RFM_Combined__c      |                |
+| Recency__c           |                |
+| Frequency__c         |                |
+| Monetary__c          |                |
+
+
+**Email Engagement Customer Buckets for Each Unified Individual**  
+
+*Creates dimensions Unified Individual ID and Customer Email Engagement Bucket based on NTILE(3) of the sum of email opens and clicks. Creates measures Open Rate and Click Rate*  
+
+*This query corresponds to the data schema in the attached PDF
+
+```
+SELECT
+  CASE
+    WHEN
+      (
+        NTILE (3) over ( 
+      ORDER BY
+        SUM(sub1.EmailOpenCount__c + sub1.EmailClickCount__c) desc) 
+      )
+      = 3 
+    THEN
+      'Low' 
+    WHEN
+      (
+        NTILE (3) over ( 
+      ORDER BY
+        SUM(sub1.EmailOpenCount__c + sub1.EmailClickCount__c)desc) 
+      )
+      = 2 
+    THEN
+      'Medium' 
+    WHEN
+      (
+        NTILE (3) over ( 
+      ORDER BY
+        SUM(sub1.EmailOpenCount__c + sub1.EmailClickCount__c)desc) 
+      )
+      = 1 
+    then
+      'High' 
+  end
+  AS Customer_Engagement_Bucket__c, SUM(sub1.EmailOpenCount__c) / SUM(sub1.EmailSendCount__c) AS Open_Rate__c, SUM(sub1.EmailClickCount__c) / SUM(sub1.EmailSendCount__c) AS Click_Rate__c, sub1.UnifiedIndividualId__c AS Unified_Individual__c 
+FROM
+  (
+    SELECT
+      SUM( 
+      CASE
+        WHEN
+          ssot__EmailEngagement__dlm.ssot__EngagementChannelActionId__c = 'Open' 
+        THEN
+          1 
+        ELSE
+          0 
+      end
+) AS EmailOpenCount__c, SUM( 
+      CASE
+        WHEN
+          ssot__EmailEngagement__dlm.ssot__EngagementChannelActionId__c = 'Click' 
+        THEN
+          1 
+        ELSE
+          0 
+      end
+) AS EmailClickCount__c, SUM( 
+      CASE
+        WHEN
+          ssot__EmailEngagement__dlm.ssot__EngagementChannelActionId__c = 'Send' 
+        THEN
+          1 
+        ELSE
+          0 
+      end
+) AS EmailSendCount__c, UnifiedIndividual__dlm.ssot__Id__c AS UnifiedIndividualId__c 
+    FROM
+      UnifiedIndividual__dlm 
+      INNER JOIN
+        IndividualIdentityLink__dlm 
+        ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+      INNER JOIN
+        ssot__EmailEngagement__dlm 
+        ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__EmailEngagement__dlm.ssot__IndividualId__c 
+    GROUP BY
+      UnifiedIndividual__dlm.ssot__Id__c 
+  )
+  AS sub1 
+GROUP BY
+  Unified_Individual__c 
+HAVING
+  SUM(sub1.EmailOpenCount__c + sub1.EmailClickCount__c) > 0
+```
+| Measure                      | Dimension            |
+| -----------                  | -----------          |
+| Customer_Engagement_Bucket__c| Unified_Individual__c|
+| Open_Rate__c                 |                      |
+| Click_Rate__c                |                      |
+
+
+**Social Channel Affinity for Each Unified Individual**  
+
+*Creates dimensions Unified Individual ID and Social Channel Affinity Source based on the user's most frequent social channel engagement. Creates measure Social Channel Affinity Score from 0-100 based on how many times a user engaged with the social channel they have the most affinity for*   
+
+*This query corresponds to the data schema in the attached PDF
+
+```
+Select
+  userScore.Unified_Individual__c as Unified_Individual__c,
+  userScore.socialchannelaffinitysource__c as Social_Channel_Affinity_Source__c,
+  (
+    FIRST(userScore.Social_Channel_Affinity_Count__c) / Max(totalMax.totalmaxsocialchannelaffinitycount__c)
+  )
+  *100 as Social_Channel_Affinity_Score__c 
+FROM
+  (
+    Select
+      sub2.Unified_Individual__c as Unified_Individual__c,
+      FIRST(sub2.socialchannelaffinitycount__c) as Social_Channel_Affinity_Count__c,
+      CASE
+        WHEN
+          (
+            GREATEST(SUM(sub2.facebooksourcecount__c), SUM(sub2.googlesourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.directsourcecount__c)) = SUM(sub2.facebooksourcecount__c) 
+            AND GREATEST(SUM(sub2.googlesourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.directsourcecount__c)) < SUM(sub2.facebooksourcecount__c) 
+          )
+        THEN
+          'Facebook' 
+        WHEN
+          (
+            GREATEST(SUM(sub2.facebooksourcecount__c), SUM(sub2.googlesourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.directsourcecount__c)) = SUM(sub2.googlesourcecount__c) 
+            AND GREATEST(SUM(sub2.facebooksourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.directsourcecount__c)) < SUM(sub2.googlesourcecount__c) 
+          )
+        THEN
+          'Google' 
+        WHEN
+          (
+            GREATEST(SUM(sub2.facebooksourcecount__c), SUM(sub2.googlesourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.directsourcecount__c)) = SUM(sub2.twittersourcecount__c) 
+            AND GREATEST(SUM(sub2.googlesourcecount__c), SUM(sub2.facebooksourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.directsourcecount__c)) < SUM(sub2.twittersourcecount__c) 
+          )
+        THEN
+          'Twitter' 
+        WHEN
+          (
+            GREATEST(SUM(sub2.facebooksourcecount__c), SUM(sub2.googlesourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.directsourcecount__c)) = SUM(sub2.pinterestsourcecount__c) 
+            AND GREATEST(SUM(sub2.googlesourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.facebooksourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.directsourcecount__c)) < SUM(sub2.pinterestsourcecount__c) 
+          )
+        THEN
+          'Pinterest' 
+        WHEN
+          (
+            GREATEST(SUM(sub2.facebooksourcecount__c), SUM(sub2.googlesourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.directsourcecount__c)) = SUM(sub2.instagramsourcecount__c) 
+            AND GREATEST(SUM(sub2.googlesourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.facebooksourcecount__c), SUM(sub2.directsourcecount__c)) < SUM(sub2.instagramsourcecount__c) 
+          )
+        THEN
+          'Instagram' 
+        WHEN
+          (
+            GREATEST(SUM(sub2.facebooksourcecount__c), SUM(sub2.googlesourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.directsourcecount__c)) = SUM(sub2.directsourcecount__c) 
+            AND GREATEST(SUM(sub2.googlesourcecount__c), SUM(sub2.twittersourcecount__c), SUM(sub2.pinterestsourcecount__c), SUM(sub2.instagramsourcecount__c), SUM(sub2.facebooksourcecount__c)) < SUM(sub2.directsourcecount__c) 
+          )
+        THEN
+          'Direct' 
+        ELSE
+          'Tie' 
+      end
+      as socialchannelaffinitysource__c 
+    FROM
+      (
+        Select
+          sub1.Unified_Individual__c as Unified_Individual__c,
+          FIRST(sub1.facebooksourcecount__c) as facebooksourcecount__c,
+          FIRST(sub1.googlesourcecount__c) as googlesourcecount__c,
+          FIRST(sub1.twittersourcecount__c) as twittersourcecount__c,
+          FIRST(sub1.pinterestsourcecount__c) as pinterestsourcecount__c,
+          FIRST(sub1.instagramsourcecount__c) as instagramsourcecount__c,
+          FIRST(sub1.directsourcecount__c) as directsourcecount__c,
+          FIRST(GREATEST (sub1.facebooksourcecount__c, sub1.googlesourcecount__c, sub1.twittersourcecount__c, sub1.pinterestsourcecount__c, sub1.instagramsourcecount__c, sub1.directsourcecount__c)) as socialchannelaffinitycount__c 
+        From
+          (
+            Select
+              UnifiedIndividual__dlm.ssot__Id__c as Unified_Individual__c,
+              SUM( 
+              CASE
+                WHEN
+                  ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Facebook' 
+                  or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Facebook' 
+                then
+                  1 
+                else
+                  0 
+              end
+) as facebooksourcecount__c, SUM( 
+              CASE
+                WHEN
+                  ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Google' 
+                  or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Google' 
+                then
+                  1 
+                else
+                  0 
+              end
+) as googlesourcecount__c, SUM( 
+              CASE
+                WHEN
+                  ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Twitter' 
+                  or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Twitter' 
+                then
+                  1 
+                else
+                  0 
+              end
+) as twittersourcecount__c, SUM( 
+              CASE
+                WHEN
+                  ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Pinterest' 
+                  or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Pinterest' 
+                then
+                  1 
+                else
+                  0 
+              end
+) as pinterestsourcecount__c, SUM( 
+              CASE
+                WHEN
+                  ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Instagram' 
+                  or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Instagram' 
+                then
+                  1 
+                else
+                  0 
+              end
+) as instagramsourcecount__c, SUM( 
+              CASE
+                WHEN
+                  ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Direct' 
+                  or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Direct' 
+                then
+                  1 
+                else
+                  0 
+              end
+) as directsourcecount__c 
+            FROM
+              UnifiedIndividual__dlm 
+              INNER JOIN
+                IndividualIdentityLink__dlm 
+                ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+              LEFT JOIN
+                ssot__DeviceApplicationEngagement__dlm 
+                ON ssot__DeviceApplicationEngagement__dlm.ssot__IndividualId__c = IndividualIdentityLink__dlm.SourceRecordId__c 
+              LEFT JOIN
+                ssot__WebsiteEngagement__dlm 
+                ON ssot__WebsiteEngagement__dlm.ssot__IndividualId__c = IndividualIdentityLink__dlm.SourceRecordId__c 
+            GROUP BY
+              UnifiedIndividual__dlm.ssot__Id__c 
+          )
+          as sub1 
+        GROUP BY
+          sub1.Unified_Individual__c 
+      )
+      as sub2 
+    GROUP BY
+      sub2.Unified_Individual__c
+  )
+  AS userScore 
+  FULL JOIN
+    (
+      SELECT
+        MAX(sub2.socialchannelaffinitycount__c) as totalmaxsocialchannelaffinitycount__c 
+      FROM
+        (
+          Select
+            sub1.Unified_Individual__c as Unified_Individual__c,
+            FIRST(GREATEST (sub1.facebooksourcecount__c, sub1.googlesourcecount__c, sub1.twittersourcecount__c, sub1.pinterestsourcecount__c, sub1.instagramsourcecount__c, sub1.directsourcecount__c)) as socialchannelaffinitycount__c 
+          From
+            (
+              Select
+                UnifiedIndividual__dlm.ssot__Id__c as Unified_Individual__c,
+                SUM( 
+                CASE
+                  WHEN
+                    ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Facebook' 
+                    or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Facebook' 
+                  then
+                    1 
+                  else
+                    0 
+                end
+) as facebooksourcecount__c, SUM( 
+                CASE
+                  WHEN
+                    ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Google' 
+                    or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Google' 
+                  then
+                    1 
+                  else
+                    0 
+                end
+) as googlesourcecount__c, SUM( 
+                CASE
+                  WHEN
+                    ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Twitter' 
+                    or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Twitter' 
+                  then
+                    1 
+                  else
+                    0 
+                end
+) as twittersourcecount__c, SUM( 
+                CASE
+                  WHEN
+                    ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Pinterest' 
+                    or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Pinterest' 
+                  then
+                    1 
+                  else
+                    0 
+                end
+) as pinterestsourcecount__c, SUM( 
+                CASE
+                  WHEN
+                    ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Instagram' 
+                    or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Instagram' 
+                  then
+                    1 
+                  else
+                    0 
+                end
+) as instagramsourcecount__c, SUM( 
+                CASE
+                  WHEN
+                    ssot__WebsiteEngagement__dlm.Referrer_Source__c = 'Direct' 
+                    or ssot__DeviceApplicationEngagement__dlm.Referrer_Source__c = 'Direct' 
+                  then
+                    1 
+                  else
+                    0 
+                end
+) as directsourcecount__c 
+              FROM
+                UnifiedIndividual__dlm 
+                INNER JOIN
+                  IndividualIdentityLink__dlm 
+                  ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+                LEFT JOIN
+                  ssot__DeviceApplicationEngagement__dlm 
+                  ON ssot__DeviceApplicationEngagement__dlm.ssot__IndividualId__c = IndividualIdentityLink__dlm.SourceRecordId__c 
+                LEFT JOIN
+                  ssot__WebsiteEngagement__dlm 
+                  ON ssot__WebsiteEngagement__dlm.ssot__IndividualId__c = IndividualIdentityLink__dlm.SourceRecordId__c 
+              GROUP BY
+                UnifiedIndividual__dlm.ssot__Id__c 
+            )
+            as sub1 
+          GROUP BY
+            sub1.Unified_Individual__c 
+        )
+        as sub2 
+    )
+    AS totalMax 
+    ON userScore.Unified_Individual__c <> '' 
+    AND totalMax.totalmaxsocialchannelaffinitycount__c <> - 1000 
+Group by
+  Unified_Individual__c, Social_Channel_Affinity_Source__c
+```
+| Measure                         | Dimensions                       |
+| -----------                     | -----------                      |
+| Social_Channel_Affinity_Score__c| Unified_Individual__c            |
+|                                 | Social_Channel_Affinity_Source__c|
