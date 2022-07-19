@@ -39,7 +39,7 @@ Attached is a PDF file called "Data Schema" that shows the data relationships fo
 * Social Channel Affinity for Each Unified Individual
 
 
-***Example Queries***
+***Queries***
 
 **Spend by Customer**  
 
