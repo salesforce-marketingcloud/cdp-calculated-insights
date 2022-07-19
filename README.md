@@ -37,9 +37,10 @@ Attached is a PDF file called "Data Schema" that shows the data relationships fo
 * Recency, Frequency, and Monetary (RFM) Metrics for Each Unified Individual with Customer Buckets
 * Email Engagement Customer Buckets for Each Unified Individual
 * Social Channel Affinity for Each Unified Individual
+* Web, Mobile, and Email Engagement Scores (3 Queries)
 
 
-***Queries***
+***Example Queries***
 
 **Spend by Customer**  
 
@@ -98,7 +99,7 @@ GROUP BY
 
 **Count of Emails Opened for Each Unified Individual**  
 
-*Creates a dimension Unified Individal ID and a measure Email Open Count*
+*Creates a dimension Unified Individual ID and a measure Email Open Count*
 
 ```
 SELECT COUNT( EmailEngagement__dlm.Id__c) as email_open_count__c,
@@ -990,3 +991,465 @@ Group by
 | -----------                     | -----------                      |
 | Social_Channel_Affinity_Score__c| Unified_Individual__c            |
 |                                 | Social_Channel_Affinity_Source__c|
+
+
+**Web, Mobile, and Email Engagement Scores (3 Queries)**  
+
+*Creates dimension Unified Individual as well as product related dimensions like Product Category. Creates measure Web Engagement Score (and mobile and email scores, respectively). Note: Email Engagement query is slightly different than web and mobile to account for engagement based on only opens and clicks and doesn't include product related dimensions since the schema doesn't directly relate to the product table*  
+
+*These queries correspond to the data schema in the attached PDF  
+
+| Measure                         | Dimensions            |
+| -----------                     | -----------           |
+| Web_Engagement_Score__c         | Unified_Individual__c |
+| (or Mobile or Email Scores)     | Content_Category__c   |
+|                                 | Product_Category__c   |
+|                                 | Product_SubCategory__c|
+|                                 | Product_Name__c       |
+|                                 | Brand__c              |
+
+*Web Engagement Score*
+```
+ SELECT
+  userScore.Unified_Individual__c as Unified_Individual__c,
+  (
+    FIRST(userScore.Web_Engagement_Count__c) / Max(totalMax.totalmaxwebengagementcount__c) 
+  )
+  *100 as Web_Engagement_Score__c,
+  userScore.Content_Category__c as Content_Category__c,
+  userScore.Product_Category__c as Product_Category__c,
+  userScore.Product_SubCategory__c as Product_SubCategory__c,
+  userScore.Product_Name__c as Product_Name__c,
+  userScore.Brand__c as Brand__c 
+FROM
+  (
+    SELECT
+      sub1.Unified_Individual__c as Unified_Individual__c,
+      sub1.Content_Category__c as Content_Category__c,
+      sub1.Product_Category__c as Product_Category__c,
+      sub1.Product_SubCategory__c as Product_SubCategory__c,
+      sub1.Product_Name__c as Product_Name__c,
+      sub1.Brand__c as Brand__c,
+      SUM( 
+      CASE
+        when
+          isnull(sub1.Web_Engagement_Count__c) 
+        then
+          0 
+        else
+          sub1.Web_Engagement_Count__c 
+      end
+) as Web_Engagement_Count__c 
+    FROM
+      (
+        SELECT
+          COUNT(ssot__WebsiteEngagement__dlm.ssot__EngagementChannelActionId__c) as Web_Engagement_Count__c,
+          UnifiedIndividual__dlm.ssot__Id__c as Unified_Individual__c,
+          Content_Catalog__dlm.category__c as Content_Category__c,
+          ssot__GoodsProduct__dlm.Category__c as Product_Category__c,
+          ssot__GoodsProduct__dlm.Subcategory__c as Product_SubCategory__c,
+          ssot__GoodsProduct__dlm.Product_Name__c as Product_Name__c,
+          ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c 
+        FROM
+          UnifiedIndividual__dlm 
+          INNER JOIN
+            IndividualIdentityLink__dlm 
+            ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+          FULL JOIN
+            ssot__WebsiteEngagement__dlm 
+            ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__WebsiteEngagement__dlm.ssot__IndividualId__c 
+          LEFT Join
+            ssot__GoodsProduct__dlm 
+            on ssot__GoodsProduct__dlm.ssot__Id__c = ssot__WebsiteEngagement__dlm.SKU__c 
+          LEFT JOIN
+            Content_Catalog__dlm 
+            ON Content_Catalog__dlm.contentid__c = ssot__WebsiteEngagement__dlm.Content_ID__c 
+        GROUP BY
+          UnifiedIndividual__dlm.ssot__Id__c,
+          Content_Catalog__dlm.category__c,
+          ssot__GoodsProduct__dlm.Category__c,
+          ssot__GoodsProduct__dlm.Subcategory__c,
+          ssot__GoodsProduct__dlm.Product_Name__c,
+          ssot__GoodsProduct__dlm.ssot__BrandId__c 
+      )
+      as sub1 
+    GROUP BY
+      sub1.Unified_Individual__c,
+      sub1.Content_Category__c,
+      sub1.Product_Category__c,
+      sub1.Product_SubCategory__c,
+      sub1.Product_Name__c,
+      sub1.Brand__c 
+  )
+  AS userScore 
+  FULL JOIN
+    (
+      SELECT
+        MAX(sub2.Web_Engagement_Count__c) as totalmaxwebengagementcount__c 
+      FROM
+        (
+          SELECT
+            sub1.Unified_Individual__c as Unified_Individual__c,
+            sub1.Content_Category__c as Content_Category__c,
+            sub1.Product_Category__c as Product_Category__c,
+            sub1.Product_SubCategory__c as Product_SubCategory__c,
+            sub1.Product_Name__c as Product_Name__c,
+            sub1.Brand__c as Brand__c,
+            SUM( 
+            CASE
+              when
+                isnull(sub1.Web_Engagement_Count__c) 
+              then
+                0 
+              else
+                sub1.Web_Engagement_Count__c 
+            end
+) as Web_Engagement_Count__c 
+          FROM
+            (
+              SELECT
+                COUNT(ssot__WebsiteEngagement__dlm.ssot__EngagementChannelActionId__c) as Web_Engagement_Count__c,
+                UnifiedIndividual__dlm.ssot__Id__c as Unified_Individual__c,
+                Content_Catalog__dlm.category__c as Content_Category__c,
+                ssot__GoodsProduct__dlm.Category__c as Product_Category__c,
+                ssot__GoodsProduct__dlm.Subcategory__c as Product_SubCategory__c,
+                ssot__GoodsProduct__dlm.Product_Name__c as Product_Name__c,
+                ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c 
+              FROM
+                UnifiedIndividual__dlm 
+                INNER JOIN
+                  IndividualIdentityLink__dlm 
+                  ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+                FULL JOIN
+                  ssot__WebsiteEngagement__dlm 
+                  ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__WebsiteEngagement__dlm.ssot__IndividualId__c 
+                LEFT Join
+                  ssot__GoodsProduct__dlm 
+                  on ssot__GoodsProduct__dlm.ssot__Id__c = ssot__WebsiteEngagement__dlm.SKU__c 
+                LEFT JOIN
+                  Content_Catalog__dlm 
+                  ON Content_Catalog__dlm.contentid__c = ssot__WebsiteEngagement__dlm.Content_ID__c 
+              GROUP BY
+                UnifiedIndividual__dlm.ssot__Id__c,
+                Content_Catalog__dlm.category__c,
+                ssot__GoodsProduct__dlm.Category__c,
+                ssot__GoodsProduct__dlm.Subcategory__c,
+                ssot__GoodsProduct__dlm.Product_Name__c,
+                ssot__GoodsProduct__dlm.ssot__BrandId__c 
+            )
+            as sub1 
+          GROUP BY
+            sub1.Unified_Individual__c,
+            sub1.Content_Category__c,
+            sub1.Product_Category__c,
+            sub1.Product_SubCategory__c,
+            sub1.Product_Name__c,
+            sub1.Brand__c 
+        )
+        as sub2 
+    )
+    AS totalMax 
+    ON userScore.Unified_Individual__c <> '' 
+    AND totalMax.totalmaxwebengagementcount__c <> - 1000 
+Group by
+  Unified_Individual__c,
+  Content_Category__c,
+  Product_Category__c,
+  Product_SubCategory__c,
+  Product_Name__c,
+  Brand__c
+```
+
+*Mobile Engagement Score*  
+```
+SELECT
+  userScore.Unified_Individual__c as Unified_Individual__c,
+  (
+    FIRST(userScore.Mobile_Engagement_Count__c) / Max(totalMax.totalmaxmobileengagementcount__c) 
+  )
+  *100 as Mobile_Engagement_Score__c,
+  userScore.Content_Category__c as Content_Category__c,
+  userScore.Product_Category__c as Product_Category__c,
+  userScore.Product_SubCategory__c as Product_SubCategory__c,
+  userScore.Product_Name__c as Product_Name__c,
+  userScore.Brand__c as Brand__c 
+FROM
+  (
+    SELECT
+      sub1.Unified_Individual__c as Unified_Individual__c,
+      sub1.Content_Category__c as Content_Category__c,
+      sub1.Product_Category__c as Product_Category__c,
+      sub1.Product_SubCategory__c as Product_SubCategory__c,
+      sub1.Product_Name__c as Product_Name__c,
+      sub1.Brand__c as Brand__c,
+      SUM( 
+      CASE
+        when
+          isnull(sub1.Mobile_Engagement_Count__c) 
+        then
+          0 
+        else
+          sub1.Mobile_Engagement_Count__c 
+      end
+) as Mobile_Engagement_Count__c 
+    FROM
+      (
+        SELECT
+          COUNT(ssot__DeviceApplicationEngagement__dlm.ssot__EngagementChannelActionId__c) as Mobile_Engagement_Count__c,
+          UnifiedIndividual__dlm.ssot__Id__c as Unified_Individual__c,
+          Content_Catalog__dlm.category__c as Content_Category__c,
+          ssot__GoodsProduct__dlm.Category__c as Product_Category__c,
+          ssot__GoodsProduct__dlm.Subcategory__c as Product_SubCategory__c,
+          ssot__GoodsProduct__dlm.Product_Name__c as Product_Name__c,
+          ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c 
+        FROM
+          UnifiedIndividual__dlm 
+          INNER JOIN
+            IndividualIdentityLink__dlm 
+            ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+          FULL JOIN
+            ssot__DeviceApplicationEngagement__dlm 
+            ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__DeviceApplicationEngagement__dlm.ssot__IndividualId__c 
+          LEFT Join
+            ssot__GoodsProduct__dlm 
+            on ssot__GoodsProduct__dlm.ssot__Id__c = ssot__DeviceApplicationEngagement__dlm.sku__c 
+          LEFT JOIN
+            Content_Catalog__dlm 
+            ON Content_Catalog__dlm.contentid__c = ssot__DeviceApplicationEngagement__dlm.ContentID__c 
+        GROUP BY
+          UnifiedIndividual__dlm.ssot__Id__c,
+          Content_Catalog__dlm.category__c,
+          ssot__GoodsProduct__dlm.Category__c,
+          ssot__GoodsProduct__dlm.Subcategory__c,
+          ssot__GoodsProduct__dlm.Product_Name__c,
+          ssot__GoodsProduct__dlm.ssot__BrandId__c 
+      )
+      as sub1 
+    GROUP BY
+      sub1.Unified_Individual__c,
+      sub1.Content_Category__c,
+      sub1.Product_Category__c,
+      sub1.Product_SubCategory__c,
+      sub1.Product_Name__c,
+      sub1.Brand__c 
+  )
+  AS userScore 
+  FULL JOIN
+    (
+      SELECT
+        MAX(sub2.Mobile_Engagement_Count__c) as totalmaxmobileengagementcount__c 
+      FROM
+        (
+          SELECT
+            sub1.Unified_Individual__c as Unified_Individual__c,
+            sub1.Content_Category__c as Content_Category__c,
+            sub1.Product_Category__c as Product_Category__c,
+            sub1.Product_SubCategory__c as Product_SubCategory__c,
+            sub1.Product_Name__c as Product_Name__c,
+            sub1.Brand__c as Brand__c,
+            SUM( 
+            CASE
+              when
+                isnull(sub1.Mobile_Engagement_Count__c) 
+              then
+                0 
+              else
+                sub1.Mobile_Engagement_Count__c 
+            end
+) as Mobile_Engagement_Count__c 
+          FROM
+            (
+              SELECT
+                COUNT(ssot__DeviceApplicationEngagement__dlm.ssot__EngagementChannelActionId__c) as Mobile_Engagement_Count__c,
+                UnifiedIndividual__dlm.ssot__Id__c as Unified_Individual__c,
+                Content_Catalog__dlm.category__c as Content_Category__c,
+                ssot__GoodsProduct__dlm.Category__c as Product_Category__c,
+                ssot__GoodsProduct__dlm.Subcategory__c as Product_SubCategory__c,
+                ssot__GoodsProduct__dlm.Product_Name__c as Product_Name__c,
+                ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c 
+              FROM
+                UnifiedIndividual__dlm 
+                INNER JOIN
+                  IndividualIdentityLink__dlm 
+                  ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+                FULL JOIN
+                  ssot__DeviceApplicationEngagement__dlm 
+                  ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__DeviceApplicationEngagement__dlm.ssot__IndividualId__c 
+                LEFT Join
+                  ssot__GoodsProduct__dlm 
+                  on ssot__GoodsProduct__dlm.ssot__Id__c = ssot__DeviceApplicationEngagement__dlm.sku__c 
+                LEFT JOIN
+                  Content_Catalog__dlm 
+                  ON Content_Catalog__dlm.contentid__c = ssot__DeviceApplicationEngagement__dlm.ContentID__c 
+              GROUP BY
+                UnifiedIndividual__dlm.ssot__Id__c,
+                Content_Catalog__dlm.category__c,
+                ssot__GoodsProduct__dlm.Category__c,
+                ssot__GoodsProduct__dlm.Subcategory__c,
+                ssot__GoodsProduct__dlm.Product_Name__c,
+                ssot__GoodsProduct__dlm.ssot__BrandId__c 
+            )
+            as sub1 
+          GROUP BY
+            sub1.Unified_Individual__c,
+            sub1.Content_Category__c,
+            sub1.Product_Category__c,
+            sub1.Product_SubCategory__c,
+            sub1.Product_Name__c,
+            sub1.Brand__c 
+        )
+        as sub2 
+    )
+    AS totalMax 
+    ON userScore.Unified_Individual__c <> '' 
+    AND totalMax.totalmaxmobileengagementcount__c <> - 1000 
+Group by
+  Unified_Individual__c,
+  Content_Category__c,
+  Product_Category__c,
+  Product_SubCategory__c,
+  Product_Name__c,
+  Brand__c
+```
+
+*Email Engagement Score*  
+```
+ Select
+  userScore.Unified_Individual__c as Unified_Individual__c,
+  (
+    FIRST(userScore.Email_Engagement_Count__c) / Max(totalMax.totalmaxemailengagementcount__c ) 
+  )
+  *100 as Email_Engagement_Score__c 
+FROM
+  (
+    SELECT
+      sub2.Unified_Individual__c as Unified_Individual__c,
+      SUM( 
+      CASE
+        when
+          isnull(sub2.Email_Engagement_Count__c) 
+        then
+          0 
+        else
+          sub2.Email_Engagement_Count__c 
+      end
+) as Email_Engagement_Count__c 
+    FROM
+      (
+        SELECT
+          SUM(sub1.EmailOpenCount__c + sub1.EmailClickCount__c) as Email_Engagement_Count__c,
+          sub1.Unified_Individual__c AS Unified_Individual__c 
+        FROM
+          (
+            SELECT
+              SUM( 
+              CASE
+                WHEN
+                  ssot__EmailEngagement__dlm.ssot__EngagementChannelActionId__c = 'Open' 
+                THEN
+                  1 
+                ELSE
+                  0 
+              end
+) AS EmailOpenCount__c, SUM( 
+              CASE
+                WHEN
+                  ssot__EmailEngagement__dlm.ssot__EngagementChannelActionId__c = 'Click' 
+                THEN
+                  1 
+                ELSE
+                  0 
+              end
+) AS EmailClickCount__c, UnifiedIndividual__dlm.ssot__Id__c as Unified_Individual__c 
+            FROM
+              UnifiedIndividual__dlm 
+              INNER JOIN
+                IndividualIdentityLink__dlm 
+                ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+              FULL JOIN
+                ssot__EmailEngagement__dlm 
+                ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__EmailEngagement__dlm.ssot__IndividualId__c 
+            GROUP BY
+              UnifiedIndividual__dlm.ssot__Id__c 
+          )
+          as sub1 
+        GROUP BY
+          sub1.Unified_Individual__c 
+      )
+      as sub2 
+    GROUP BY
+      sub2.Unified_Individual__c 
+  )
+  AS userScore 
+  FULL JOIN
+    (
+      SELECT
+        MAX(sub3.Email_Engagement_Count__c) as totalmaxemailengagementcount__c 
+      FROM
+        (
+          SELECT
+            sub2.Unified_Individual__c as Unified_Individual__c,
+            SUM( 
+            CASE
+              when
+                isnull(sub2.Email_Engagement_Count__c) 
+              then
+                0 
+              else
+                sub2.Email_Engagement_Count__c 
+            end
+) as Email_Engagement_Count__c 
+          FROM
+            (
+              SELECT
+                SUM(sub1.EmailOpenCount__c + sub1.EmailClickCount__c) as Email_Engagement_Count__c,
+                sub1.Unified_Individual__c AS Unified_Individual__c 
+              FROM
+                (
+                  SELECT
+                    SUM( 
+                    CASE
+                      WHEN
+                        ssot__EmailEngagement__dlm.ssot__EngagementChannelActionId__c = 'Open' 
+                      THEN
+                        1 
+                      ELSE
+                        0 
+                    end
+) AS EmailOpenCount__c, SUM( 
+                    CASE
+                      WHEN
+                        ssot__EmailEngagement__dlm.ssot__EngagementChannelActionId__c = 'Click' 
+                      THEN
+                        1 
+                      ELSE
+                        0 
+                    end
+) AS EmailClickCount__c, UnifiedIndividual__dlm.ssot__Id__c as Unified_Individual__c 
+                  FROM
+                    UnifiedIndividual__dlm 
+                    INNER JOIN
+                      IndividualIdentityLink__dlm 
+                      ON UnifiedIndividual__dlm.ssot__Id__c = IndividualIdentityLink__dlm.UnifiedRecordId__c 
+                    FULL JOIN
+                      ssot__EmailEngagement__dlm 
+                      ON IndividualIdentityLink__dlm.SourceRecordId__c = ssot__EmailEngagement__dlm.ssot__IndividualId__c 
+                  GROUP BY
+                    UnifiedIndividual__dlm.ssot__Id__c 
+                )
+                as sub1 
+              GROUP BY
+                sub1.Unified_Individual__c 
+            )
+            as sub2 
+          GROUP BY
+            sub2.Unified_Individual__c 
+        )
+        as sub3 
+    )
+    AS totalMax 
+    ON userScore.Unified_Individual__c <> '' 
+    AND totalMax.totalmaxemailengagementcount__c <> - 1000 
+Group by
+  Unified_Individual__c
+```
