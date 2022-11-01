@@ -1,0 +1,1084 @@
+SELECT
+   FIRST(finalsub1.Recency_Score__c) as Recency_Score__c,
+   FIRST(finalsub1.Recency__c) as Recency__c,
+   FIRST(finalsub1.Frequency_Score__c) as Frequency_Score__c,
+   FIRST(finalsub1.Frequency__c) as Frequency__c,
+   FIRST(finalsub1.Monetary_Score__c) as Monetary_Score__c,
+   FIRST(finalsub1.Monetary__c) as Monetary__c,
+   FIRST(finalsub1.Engagement_Recency__c) as Engagement_Recency__c,
+   FIRST(finalsub1.Engagement_Frequency__c) as Engagement_Frequency__c,
+   FIRST(finalsub1.Engagement_Monetary__c) as Engagement_Monetary__c,
+   FIRST(finalsub1.Purchase_Recency__c) as Purchase_Recency__c,
+   FIRST(finalsub1.Purchase_Frequency__c) as Purchase_Frequency__c,
+   FIRST(finalsub1.Purchase_Monetary__c) as Purchase_Monetary__c,
+   finalsub1.Product_SKU__c as Product_SKU__c,
+   finalsub1.Product_Name__c as Product_Name__c,
+   finalsub1.Product_Category__c as Product_Category__c,
+   finalsub1.Product_Subcategory__c as Product_Subcategory__c,
+   finalsub1.Brand__c as Brand__c,
+   CASE
+      when
+         (
+            finalsub1.Recency_Score__c > 80 
+            and finalsub1.Recency_Score__c <= 100 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 40 
+            and finalsub1.Frequency_Score__c <= 60 
+         )
+      then
+         'R-F: New' 
+      when
+         (
+            finalsub1.Recency_Score__c > 60 
+            and finalsub1.Recency_Score__c <= 80 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 40 
+            and finalsub1.Frequency_Score__c <= 60 
+         )
+      then
+         'R-F: Potential' 
+      when
+         (
+            finalsub1.Recency_Score__c > 60 
+            and finalsub1.Recency_Score__c <= 80 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 80 
+            and finalsub1.Frequency_Score__c <= 100 
+         )
+      then
+         'R-F: Top' 
+      when
+         (
+            finalsub1.Recency_Score__c > 60 
+            and finalsub1.Recency_Score__c <= 80 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 80 
+            and finalsub1.Frequency_Score__c <= 100 
+         )
+      then
+         'R-F: Best' 
+      when
+         (
+            finalsub1.Recency_Score__c > 60 
+            and finalsub1.Recency_Score__c <= 80 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 20 
+            and finalsub1.Frequency_Score__c <= 40 
+         )
+      then
+         'R-F: Promising New' 
+      when
+         (
+            finalsub1.Recency_Score__c > 20 
+            and finalsub1.Recency_Score__c <= 40 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 20 
+            and finalsub1.Frequency_Score__c <= 40 
+         )
+      then
+         'R-F: Shelf Risk' 
+      when
+         (
+            finalsub1.Recency_Score__c > 40 
+            and finalsub1.Recency_Score__c <= 60 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 40 
+            and finalsub1.Frequency_Score__c <= 60 
+         )
+      then
+         'R-F: Neutral' 
+      when
+         (
+            finalsub1.Recency_Score__c > 40 
+            and finalsub1.Recency_Score__c <= 60 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 60 
+            and finalsub1.Frequency_Score__c <= 80 
+         )
+      then
+         'R-F: Top Attention' 
+      when
+         (
+            finalsub1.Recency_Score__c > 20 
+            and finalsub1.Recency_Score__c <= 40 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 20 
+            and finalsub1.Frequency_Score__c <= 40 
+         )
+      then
+         'R-F: Retire Alert' 
+      when
+         (
+            finalsub1.Recency_Score__c > 40 
+            and finalsub1.Recency_Score__c <= 60 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 20 
+            and finalsub1.Frequency_Score__c <= 40 
+         )
+      then
+         'R-F: Top Alarm' 
+      when
+         (
+            finalsub1.Recency_Score__c >= 0 
+            and finalsub1.Recency_Score__c <= 20 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c > 20 
+            and finalsub1.Frequency_Score__c <= 40 
+         )
+      then
+         'R-F: Remove' 
+      when
+         (
+            finalsub1.Recency_Score__c > 80 
+            and finalsub1.Recency_Score__c <= 100 
+         )
+         and 
+         (
+            finalsub1.Frequency_Score__c >= 0 
+            and finalsub1.Frequency_Score__c <= 20 
+         )
+      then
+         'R-F: Historical Top' 
+      else
+         'No Cluster' 
+   end
+   as RF_Product_Cluster__c, 
+   CASE
+      when
+         (
+            finalsub1.Recency_Score__c > 60 
+            and finalsub1.Recency_Score__c <= 80 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 20 
+            and finalsub1.Monetary_Score__c <= 40 
+         )
+      then
+         'R-M: Recent Penny' 
+      when
+         (
+            finalsub1.Recency_Score__c > 60 
+            and finalsub1.Recency_Score__c <= 80 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 60 
+            and finalsub1.Monetary_Score__c <= 80 
+         )
+      then
+         'R-M: Recent Bread' 
+      when
+         (
+            finalsub1.Recency_Score__c > 60 
+            and finalsub1.Recency_Score__c <= 80 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 40 
+            and finalsub1.Monetary_Score__c <= 60 
+         )
+      then
+         'R-M: Money Makers' 
+      when
+         (
+            finalsub1.Recency_Score__c > 80 
+            and finalsub1.Recency_Score__c <= 100 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 80 
+            and finalsub1.Monetary_Score__c <= 100 
+         )
+      then
+         'R-M: Recent Whales' 
+      when
+         (
+            finalsub1.Recency_Score__c > 40 
+            and finalsub1.Recency_Score__c <= 60 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 40 
+            and finalsub1.Monetary_Score__c <= 60 
+         )
+      then
+         'R-M: Old Penny' 
+      when
+         (
+            finalsub1.Recency_Score__c > 40 
+            and finalsub1.Recency_Score__c <= 60 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 20 
+            and finalsub1.Monetary_Score__c <= 40 
+         )
+      then
+         'R-M: Old Bread' 
+      when
+         (
+            finalsub1.Recency_Score__c > 40 
+            and finalsub1.Recency_Score__c <= 60 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 40 
+            and finalsub1.Monetary_Score__c <= 60 
+         )
+      then
+         'R-M: Old Money' 
+      when
+         (
+            finalsub1.Recency_Score__c >= 0 
+            and finalsub1.Recency_Score__c <= 20 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 80 
+            and finalsub1.Monetary_Score__c <= 100 
+         )
+      then
+         'R-M: Old Whales' 
+      when
+         (
+            finalsub1.Recency_Score__c > 20 
+            and finalsub1.Recency_Score__c <= 40 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c >= 0 
+            and finalsub1.Monetary_Score__c <= 20 
+         )
+      then
+         'R-M: Throwaway Penny' 
+      when
+         (
+            finalsub1.Recency_Score__c > 20 
+            and finalsub1.Recency_Score__c <= 40 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 40 
+            and finalsub1.Monetary_Score__c <= 60 
+         )
+      then
+         'R-M: Spoiled Bread' 
+      when
+         (
+            finalsub1.Recency_Score__c > 20 
+            and finalsub1.Recency_Score__c <= 40 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 60 
+            and finalsub1.Monetary_Score__c <= 80 
+         )
+      then
+         'R-M: Save That Money' 
+      when
+         (
+            finalsub1.Recency_Score__c > 20 
+            and finalsub1.Recency_Score__c <= 40 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 80 
+            and finalsub1.Monetary_Score__c <= 100 
+         )
+      then
+         'R-M: Save That Whale' 
+      when
+         (
+            finalsub1.Recency_Score__c >= 0 
+            and finalsub1.Recency_Score__c <= 20 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 20 
+            and finalsub1.Monetary_Score__c <= 40 
+         )
+      then
+         'R-M: Historical Money' 
+      when
+         (
+            finalsub1.Recency_Score__c >= 0 
+            and finalsub1.Recency_Score__c <= 20 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c >= 0 
+            and finalsub1.Monetary_Score__c <= 20 
+         )
+      then
+         'R-M: Dead Whale' 
+      else
+         'No Cluster' 
+   end
+   as RM_Product_Cluster__c, 
+   CASE
+      when
+         (
+            finalsub1.Frequency_Score__c > 60 
+            and finalsub1.Frequency_Score__c <= 80 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 20 
+            and finalsub1.Monetary_Score__c <= 40 
+         )
+      then
+         'F-M: Checkout Candy' 
+      when
+         (
+            finalsub1.Frequency_Score__c > 80 
+            and finalsub1.Frequency_Score__c <= 100 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 40 
+            and finalsub1.Monetary_Score__c <= 60 
+         )
+      then
+         'F-M: Fast Medium' 
+      when
+         (
+            finalsub1.Frequency_Score__c > 80 
+            and finalsub1.Frequency_Score__c <= 100 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 80 
+            and finalsub1.Monetary_Score__c <= 100 
+         )
+      then
+         'F-M: Fast Premium' 
+      when
+         (
+            finalsub1.Frequency_Score__c > 40 
+            and finalsub1.Frequency_Score__c <= 60 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c >= 0 
+            and finalsub1.Monetary_Score__c <= 20 
+         )
+      then
+         'F-M: Low Seller' 
+      when
+         (
+            finalsub1.Frequency_Score__c > 40 
+            and finalsub1.Frequency_Score__c <= 60 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 40 
+            and finalsub1.Monetary_Score__c <= 60 
+         )
+      then
+         'F-M: Average' 
+      when
+         (
+            finalsub1.Frequency_Score__c > 40 
+            and finalsub1.Frequency_Score__c <= 60 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 80 
+            and finalsub1.Monetary_Score__c <= 100 
+         )
+      then
+         'F-M: Average Premium' 
+      when
+         (
+            finalsub1.Frequency_Score__c > 20 
+            and finalsub1.Frequency_Score__c <= 40 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c >= 0 
+            and finalsub1.Monetary_Score__c <= 20 
+         )
+      then
+         'F-M: Cold Products' 
+      when
+         (
+            finalsub1.Frequency_Score__c >= 0 
+            and finalsub1.Frequency_Score__c <= 20 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 40 
+            and finalsub1.Monetary_Score__c <= 60 
+         )
+      then
+         'F-M: Slow Low Value' 
+      when
+         (
+            finalsub1.Frequency_Score__c > 20 
+            and finalsub1.Frequency_Score__c <= 40 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 80 
+            and finalsub1.Monetary_Score__c <= 100 
+         )
+      then
+         'F-M: Slow High Value' 
+      when
+         (
+            finalsub1.Frequency_Score__c > 20 
+            and finalsub1.Frequency_Score__c <= 40 
+         )
+         and 
+         (
+            finalsub1.Monetary_Score__c > 60 
+            and finalsub1.Monetary_Score__c <= 80 
+         )
+      then
+         'F-M: Sleeping Giants' 
+      else
+         'No Cluster' 
+   end
+   as FM_Product_Cluster__c 
+FROM
+   (
+      SELECT
+( FIRST(productScore.Recency__c) / Max(totalMax.Recency__c) ) *100 as Recency_Score__c,
+         (
+            FIRST(productScore.Frequency__c) / Max(totalMax.Frequency__c) 
+         )
+         *100 as Frequency_Score__c,
+         (
+            FIRST(productScore.Monetary__c) / Max(totalMax.Monetary__c) 
+         )
+         *100 as Monetary_Score__c,
+         FIRST(productScore.Recency__c) as Recency__c,
+         FIRST(productScore.Frequency__c) as Frequency__c,
+         FIRST(productScore.Monetary__c) as Monetary__c,
+         FIRST(productScore.Engagement_Recency__c) as Engagement_Recency__c,
+         FIRST(productScore.Engagement_Frequency__c) as Engagement_Frequency__c,
+         FIRST(productScore.Engagement_Monetary__c) as Engagement_Monetary__c,
+         FIRST(productScore.Purchase_Recency__c) as Purchase_Recency__c,
+         FIRST(productScore.Purchase_Frequency__c) as Purchase_Frequency__c,
+         FIRST(productScore.Purchase_Monetary__c) as Purchase_Monetary__c,
+         productScore.Product_SKU__c as Product_SKU__c,
+         productScore.Product_Name__c as Product_Name__c,
+         productScore.Product_Category__c as Product_Category__c,
+         productScore.Product_Subcategory__c as Product_Subcategory__c,
+         productScore.Brand__c as Brand__c 
+      FROM
+         (
+            SELECT
+               outersub1.Product_Name__c as Product_Name__c,
+               outersub1.Product_Category__c as Product_Category__c,
+               outersub1.Product_Subcategory__c as Product_Subcategory__c,
+               outersub1.Brand__c as Brand__c,
+               outersub1.Product_SKU__c as Product_SKU__c,
+               MIN(outersub1.WebMobileMin_Engagement_Recency__c) as Engagement_Recency__c,
+               MAX(outersub1.WebMobileSum_Engagement_Frequency__c) as Engagement_Frequency__c,
+               MAX(outersub1.WebMobileSum_Engagement_Monetary__c) as Engagement_Monetary__c,
+               MIN(outersub1.Web_Engagement_Recency__c) as Web_Engagement_Recency__c,
+               MAX(outersub1.Web_Engagement_Frequency__c) as Web_Engagement_Frequency__c,
+               MAX(outersub1.Web_Engagement_Monetary__c) as Web_Engagement_Monetary__c,
+               MIN(outersub1.Mobile_Engagement_Recency__c) as Mobile_Engagement_Recency__c,
+               MAX(outersub1.Mobile_Engagement_Frequency__c) as Mobile_Engagement_Frequency__c,
+               MAX(outersub1.Mobile_Engagement_Monetary__c) as Mobile_Engagement_Monetary__c,
+               MIN(outersub1.Purchase_Recency__c) as Purchase_Recency__c,
+               MAX(outersub1.Purchase_Frequency__c) as Purchase_Frequency__c,
+               MAX(outersub1.Purchase_Monetary__c) as Purchase_Monetary__c,
+               (
+                  SUM(outersub1.WebMobileMin_Engagement_Recency__c + outersub1.Purchase_Recency__c) / 2 
+               )
+               as Recency__c,
+               (
+                  SUM(outersub1.WebMobileSum_Engagement_Frequency__c + outersub1.Purchase_Frequency__c) / 2 
+               )
+               as Frequency__c,
+               (
+                  SUM(outersub1.WebMobileSum_Engagement_Monetary__c + outersub1.Purchase_Monetary__c) / 2 
+               )
+               as Monetary__c 
+            FROM
+               (
+                  SELECT
+                     WebEngagementsub.Product_Name__c as Product_Name__c,
+                     WebEngagementsub.Product_Category__c as Product_Category__c,
+                     WebEngagementsub.Product_Subcategory__c as Product_Subcategory__c,
+                     WebEngagementsub.Brand__c as Brand__c,
+                     WebEngagementsub.Product_SKU__c as Product_SKU__c,
+                     MIN(Purchasesub.Purchase_Recency__c) as Purchase_Recency__c,
+                     MAX(Purchasesub.Purchase_Frequency__c) as Purchase_Frequency__c,
+                     SUM(Purchasesub.Purchase_Monetary__c) as Purchase_Monetary__c,
+                     MIN(WebEngagementsub.Web_Engagement_Recency__c) as Web_Engagement_Recency__c,
+                     MAX(WebEngagementsub.Web_Engagement_Frequency__c) as Web_Engagement_Frequency__c,
+                     SUM(WebEngagementsub.Web_Engagement_Monetary__c) as Web_Engagement_Monetary__c,
+                     MIN(MobileEngagementsub.Mobile_Engagement_Recency__c) as Mobile_Engagement_Recency__c,
+                     MAX(MobileEngagementsub.Mobile_Engagement_Frequency__c) as Mobile_Engagement_Frequency__c,
+                     SUM(MobileEngagementsub.Mobile_Engagement_Monetary__c) as Mobile_Engagement_Monetary__c,
+                     SUM(WebEngagementsub.Web_Engagement_Monetary__c + MobileEngagementsub.Mobile_Engagement_Monetary__c) as WebMobileSum_Engagement_Monetary__c,
+                     SUM(WebEngagementsub.Web_Engagement_Frequency__c + MobileEngagementsub.Mobile_Engagement_Frequency__c) as WebMobileSum_Engagement_Frequency__c,
+                     MIN(LEAST(WebEngagementsub.Web_Engagement_Recency__c, MobileEngagementsub.Mobile_Engagement_Recency__c)) as WebMobileMin_Engagement_Recency__c 
+                  FROM
+                     (
+                        SELECT
+                           sub1.Product_Name__c as Product_Name__c,
+                           sub1.Product_Category__c as Product_Category__c,
+                           sub1.Product_Subcategory__c as Product_Subcategory__c,
+                           sub1.Brand__c as Brand__c,
+                           sub1.Product_SKU__c as Product_SKU__c,
+                           SUM( 
+                           CASE
+                              when
+                                 isnull(sub1.Engagement_Recency__c) 
+                              then
+                                 0 
+                              else
+                                 sub1.Engagement_Recency__c 
+                           end
+) as Web_Engagement_Recency__c, SUM( 
+                           CASE
+                              when
+                                 isnull(sub1.Engagement_Frequency__c) 
+                              then
+                                 0 
+                              else
+                                 sub1.Engagement_Frequency__c 
+                           end
+) as Web_Engagement_Frequency__c, SUM( 
+                           CASE
+                              when
+                                 isnull(sub1.Engagement_Monetary__c) 
+                              then
+                                 0 
+                              else
+                                 sub1.Engagement_Monetary__c 
+                           end
+) as Web_Engagement_Monetary__c 
+                        FROM
+                           (
+                              SELECT
+                                 ssot__GoodsProduct__dlm.Product_Name__c as Product_Name__c,
+                                 ssot__GoodsProduct__dlm.Category__c as Product_Category__c,
+                                 ssot__GoodsProduct__dlm.Subcategory__c as Product_Subcategory__c,
+                                 ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c,
+                                 ssot__GoodsProduct__dlm.ssot__ProductSKU__c as Product_SKU__c,
+                                 MIN(DATEDIFF(CURRENT_DATE(), ssot__WebsiteEngagement__dlm.ssot__EngagementDateTm__c)) as Engagement_Recency__c,
+                                 COUNT(ssot__WebsiteEngagement__dlm.ssot__IndividualId__c) as Engagement_Frequency__c,
+                                 SUM(ssot__GoodsProduct__dlm.Regular_Price__c) as Engagement_Monetary__c 
+                              FROM
+                                 ssot__GoodsProduct__dlm 
+                                 LEFT JOIN
+                                    ssot__WebsiteEngagement__dlm 
+                                    ON ssot__GoodsProduct__dlm.ssot__Id__c = ssot__WebsiteEngagement__dlm.SKU__c 
+                              WHERE
+                                 isnotnull(ssot__GoodsProduct__dlm.Product_Name__c) 
+                              GROUP BY
+                                 ssot__GoodsProduct__dlm.ssot__ProductSKU__c,
+                                 ssot__GoodsProduct__dlm.Product_Name__c,
+                                 ssot__GoodsProduct__dlm.Category__c,
+                                 ssot__GoodsProduct__dlm.Subcategory__c,
+                                 ssot__GoodsProduct__dlm.ssot__BrandId__c 
+                           )
+                           as sub1 
+                        GROUP BY
+                           sub1.Product_SKU__c,
+                           sub1.Product_Name__c,
+                           sub1.Product_Category__c,
+                           sub1.Product_Subcategory__c,
+                           sub1.Brand__c 
+                     )
+                     as WebEngagementsub 
+                     FULL JOIN
+                        (
+                           SELECT
+                              sub1.Product_Name__c as Product_Name__c,
+                              sub1.Product_Category__c as Product_Category__c,
+                              sub1.Product_Subcategory__c as Product_Subcategory__c,
+                              sub1.Brand__c as Brand__c,
+                              sub1.Product_SKU__c as Product_SKU__c,
+                              SUM( 
+                              CASE
+                                 when
+                                    isnull(sub1.Engagement_Recency__c) 
+                                 then
+                                    0 
+                                 else
+                                    sub1.Engagement_Recency__c 
+                              end
+) as Mobile_Engagement_Recency__c, SUM( 
+                              CASE
+                                 when
+                                    isnull(sub1.Engagement_Frequency__c) 
+                                 then
+                                    0 
+                                 else
+                                    sub1.Engagement_Frequency__c 
+                              end
+) as Mobile_Engagement_Frequency__c, SUM( 
+                              CASE
+                                 when
+                                    isnull(sub1.Engagement_Monetary__c) 
+                                 then
+                                    0 
+                                 else
+                                    sub1.Engagement_Monetary__c 
+                              end
+) as Mobile_Engagement_Monetary__c 
+                           FROM
+                              (
+                                 SELECT
+                                    ssot__GoodsProduct__dlm.ssot__ProductSKU__c as Product_SKU__c,
+                                    ssot__GoodsProduct__dlm.Product_Name__c as Product_Name__c,
+                                    ssot__GoodsProduct__dlm.Category__c as Product_Category__c,
+                                    ssot__GoodsProduct__dlm.Subcategory__c as Product_Subcategory__c,
+                                    ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c,
+                                    MIN(DATEDIFF(CURRENT_DATE(), ssot__DeviceApplicationEngagement__dlm.ssot__EngagementDateTm__c)) as Engagement_Recency__c,
+                                    COUNT(ssot__DeviceApplicationEngagement__dlm.ssot__IndividualId__c) as Engagement_Frequency__c,
+                                    SUM(ssot__GoodsProduct__dlm.Regular_Price__c) as Engagement_Monetary__c 
+                                 FROM
+                                    ssot__GoodsProduct__dlm 
+                                    LEFT JOIN
+                                       ssot__DeviceApplicationEngagement__dlm 
+                                       ON ssot__GoodsProduct__dlm.ssot__Id__c = ssot__DeviceApplicationEngagement__dlm.sku__c 
+                                 WHERE
+                                    isnotnull(ssot__GoodsProduct__dlm.Product_Name__c) 
+                                 GROUP BY
+                                    ssot__GoodsProduct__dlm.ssot__ProductSKU__c,
+                                    ssot__GoodsProduct__dlm.Product_Name__c,
+                                    ssot__GoodsProduct__dlm.Category__c,
+                                    ssot__GoodsProduct__dlm.Subcategory__c,
+                                    ssot__GoodsProduct__dlm.ssot__BrandId__c 
+                              )
+                              as sub1 
+                           GROUP BY
+                              sub1.Product_Name__c,
+                              sub1.Product_SKU__c,
+                              sub1.Product_Category__c,
+                              sub1.Product_Subcategory__c,
+                              sub1.Brand__c 
+                        )
+                        as MobileEngagementsub 
+                        ON WebEngagementsub.Product_SKU__c = MobileEngagementsub.Product_SKU__c 
+                     FULL JOIN
+                        (
+                           SELECT
+                              sub1.Product_Name__c as Product_Name__c,
+                              sub1.Product_Category__c as Product_Category__c,
+                              sub1.Product_Subcategory__c as Product_Subcategory__c,
+                              sub1.Brand__c as Brand__c,
+                              sub1.Product_SKU__c as Product_SKU__c,
+                              SUM( 
+                              CASE
+                                 when
+                                    isnull(sub1.Purchase_Recency__c) 
+                                 then
+                                    0 
+                                 else
+                                    sub1.Purchase_Recency__c 
+                              end
+) as Purchase_Recency__c, SUM( 
+                              CASE
+                                 when
+                                    isnull(sub1.Purchase_Frequency__c) 
+                                 then
+                                    0 
+                                 else
+                                    sub1.Purchase_Frequency__c 
+                              end
+) as Purchase_Frequency__c, SUM( 
+                              CASE
+                                 when
+                                    isnull(sub1.Purchase_Monetary__c) 
+                                 then
+                                    0 
+                                 else
+                                    sub1.Purchase_Monetary__c 
+                              end
+) as Purchase_Monetary__c 
+                           FROM
+                              (
+                                 SELECT
+                                    ssot__GoodsProduct__dlm.Product_Name__c as Product_Name__c,
+                                    ssot__GoodsProduct__dlm.Category__c as Product_Category__c,
+                                    ssot__GoodsProduct__dlm.Subcategory__c as Product_Subcategory__c,
+                                    ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c,
+                                    ssot__GoodsProduct__dlm.ssot__ProductSKU__c as Product_SKU__c,
+                                    MIN(DATEDIFF(CURRENT_DATE(), ssot__SalesOrder__dlm.ssot__PurchaseOrderDate__c)) as Purchase_Recency__c,
+                                    COUNT(ssot__SalesOrder__dlm.ssot__Id__c) as Purchase_Frequency__c,
+                                    SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) as Purchase_Monetary__c 
+                                 FROM
+                                    ssot__GoodsProduct__dlm 
+                                    FULL JOIN
+                                       ssot__SalesOrderProduct__dlm 
+                                       ON ssot__GoodsProduct__dlm.ssot__Id__c = ssot__SalesOrderProduct__dlm.ssot__ProductId__c 
+                                    LEFT JOIN
+                                       ssot__SalesOrder__dlm 
+                                       ON ssot__SalesOrderProduct__dlm.ssot__SalesOrderId__c = ssot__SalesOrder__dlm.ssot__Id__c 
+                                 WHERE
+                                    isnotnull(ssot__GoodsProduct__dlm.Product_Name__c) 
+                                 GROUP BY
+                                    ssot__GoodsProduct__dlm.ssot__ProductSKU__c,
+                                    ssot__GoodsProduct__dlm.Product_Name__c,
+                                    ssot__GoodsProduct__dlm.Category__c,
+                                    ssot__GoodsProduct__dlm.Subcategory__c,
+                                    ssot__GoodsProduct__dlm.ssot__BrandId__c 
+                              )
+                              as sub1 
+                           GROUP BY
+                              sub1.Product_SKU__c,
+                              sub1.Product_Name__c,
+                              sub1.Product_Category__c,
+                              sub1.Product_Subcategory__c,
+                              sub1.Brand__c 
+                        )
+                        as Purchasesub 
+                        ON WebEngagementsub.Product_SKU__c = Purchasesub.Product_SKU__c 
+                  GROUP BY
+                     WebEngagementsub.Product_SKU__c,
+                     WebEngagementsub.Product_Name__c,
+                     WebEngagementsub.Product_Category__c,
+                     WebEngagementsub.Product_Subcategory__c,
+                     WebEngagementsub.Brand__c 
+               )
+               as outersub1 
+            GROUP BY
+               outersub1.Product_SKU__c,
+               outersub1.Product_Name__c,
+               outersub1.Product_Category__c,
+               outersub1.Product_Subcategory__c,
+               outersub1.Brand__c 
+         )
+         as productScore 
+         FULL JOIN
+            (
+               SELECT
+                  MAX(totalMaxsub.Recency__c) as Recency__c,
+                  MAX(totalMaxsub.Frequency__c) as Frequency__c,
+                  MAX(totalMaxsub.Monetary__c) as Monetary__c 
+               FROM
+                  (
+                     SELECT
+                        outersub1.Product_Name__c as Product_Name__c,
+                        outersub1.Product_Category__c as Product_Category__c,
+                        outersub1.Product_Subcategory__c as Product_Subcategory__c,
+                        outersub1.Brand__c as Brand__c,
+                        outersub1.Product_SKU__c as Product_SKU__c,
+                        MIN(outersub1.WebMobileMin_Engagement_Recency__c) as Engagement_Recency__c,
+                        MAX(outersub1.WebMobileSum_Engagement_Frequency__c) as Engagement_Frequency__c,
+                        MAX(outersub1.WebMobileSum_Engagement_Monetary__c) as Engagement_Monetary__c,
+                        MIN(outersub1.Web_Engagement_Recency__c) as Web_Engagement_Recency__c,
+                        MAX(outersub1.Web_Engagement_Frequency__c) as Web_Engagement_Frequency__c,
+                        MAX(outersub1.Web_Engagement_Monetary__c) as Web_Engagement_Monetary__c,
+                        MIN(outersub1.Mobile_Engagement_Recency__c) as Mobile_Engagement_Recency__c,
+                        MAX(outersub1.Mobile_Engagement_Frequency__c) as Mobile_Engagement_Frequency__c,
+                        MAX(outersub1.Mobile_Engagement_Monetary__c) as Mobile_Engagement_Monetary__c,
+                        MIN(outersub1.Purchase_Recency__c) as Purchase_Recency__c,
+                        MAX(outersub1.Purchase_Frequency__c) as Purchase_Frequency__c,
+                        MAX(outersub1.Purchase_Monetary__c) as Purchase_Monetary__c,
+                        (
+                           SUM(outersub1.WebMobileMin_Engagement_Recency__c + outersub1.Purchase_Recency__c) / 2 
+                        )
+                        as Recency__c,
+                        (
+                           SUM(outersub1.WebMobileSum_Engagement_Frequency__c + outersub1.Purchase_Frequency__c) / 2 
+                        )
+                        as Frequency__c,
+                        (
+                           SUM(outersub1.WebMobileSum_Engagement_Monetary__c + outersub1.Purchase_Monetary__c) / 2 
+                        )
+                        as Monetary__c 
+                     FROM
+                        (
+                           SELECT
+                              WebEngagementsub.Product_Name__c as Product_Name__c,
+                              WebEngagementsub.Product_Category__c as Product_Category__c,
+                              WebEngagementsub.Product_Subcategory__c as Product_Subcategory__c,
+                              WebEngagementsub.Brand__c as Brand__c,
+                              WebEngagementsub.Product_SKU__c as Product_SKU__c,
+                              MIN(Purchasesub.Purchase_Recency__c) as Purchase_Recency__c,
+                              MAX(Purchasesub.Purchase_Frequency__c) as Purchase_Frequency__c,
+                              SUM(Purchasesub.Purchase_Monetary__c) as Purchase_Monetary__c,
+                              MIN(WebEngagementsub.Web_Engagement_Recency__c) as Web_Engagement_Recency__c,
+                              MAX(WebEngagementsub.Web_Engagement_Frequency__c) as Web_Engagement_Frequency__c,
+                              SUM(WebEngagementsub.Web_Engagement_Monetary__c) as Web_Engagement_Monetary__c,
+                              MIN(MobileEngagementsub.Mobile_Engagement_Recency__c) as Mobile_Engagement_Recency__c,
+                              MAX(MobileEngagementsub.Mobile_Engagement_Frequency__c) as Mobile_Engagement_Frequency__c,
+                              SUM(MobileEngagementsub.Mobile_Engagement_Monetary__c) as Mobile_Engagement_Monetary__c,
+                              SUM(WebEngagementsub.Web_Engagement_Monetary__c + MobileEngagementsub.Mobile_Engagement_Monetary__c) as WebMobileSum_Engagement_Monetary__c,
+                              SUM(WebEngagementsub.Web_Engagement_Frequency__c + MobileEngagementsub.Mobile_Engagement_Frequency__c) as WebMobileSum_Engagement_Frequency__c,
+                              MIN(LEAST(WebEngagementsub.Web_Engagement_Recency__c, MobileEngagementsub.Mobile_Engagement_Recency__c)) as WebMobileMin_Engagement_Recency__c 
+                           FROM
+                              (
+                                 SELECT
+                                    sub1.Product_Name__c as Product_Name__c,
+                                    sub1.Product_Category__c as Product_Category__c,
+                                    sub1.Product_Subcategory__c as Product_Subcategory__c,
+                                    sub1.Brand__c as Brand__c,
+                                    sub1.Product_SKU__c as Product_SKU__c,
+                                    SUM( 
+                                    CASE
+                                       when
+                                          isnull(sub1.Engagement_Recency__c) 
+                                       then
+                                          0 
+                                       else
+                                          sub1.Engagement_Recency__c 
+                                    end
+) as Web_Engagement_Recency__c, SUM( 
+                                    CASE
+                                       when
+                                          isnull(sub1.Engagement_Frequency__c) 
+                                       then
+                                          0 
+                                       else
+                                          sub1.Engagement_Frequency__c 
+                                    end
+) as Web_Engagement_Frequency__c, SUM( 
+                                    CASE
+                                       when
+                                          isnull(sub1.Engagement_Monetary__c) 
+                                       then
+                                          0 
+                                       else
+                                          sub1.Engagement_Monetary__c 
+                                    end
+) as Web_Engagement_Monetary__c 
+                                 FROM
+                                    (
+                                       SELECT
+                                          ssot__GoodsProduct__dlm.Product_Name__c as Product_Name__c,
+                                          ssot__GoodsProduct__dlm.Category__c as Product_Category__c,
+                                          ssot__GoodsProduct__dlm.Subcategory__c as Product_Subcategory__c,
+                                          ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c,
+                                          ssot__GoodsProduct__dlm.ssot__ProductSKU__c as Product_SKU__c,
+                                          MIN(DATEDIFF(CURRENT_DATE(), ssot__WebsiteEngagement__dlm.ssot__EngagementDateTm__c)) as Engagement_Recency__c,
+                                          COUNT(ssot__WebsiteEngagement__dlm.ssot__IndividualId__c) as Engagement_Frequency__c,
+                                          SUM(ssot__GoodsProduct__dlm.Regular_Price__c) as Engagement_Monetary__c 
+                                       FROM
+                                          ssot__GoodsProduct__dlm 
+                                          LEFT JOIN
+                                             ssot__WebsiteEngagement__dlm 
+                                             ON ssot__GoodsProduct__dlm.ssot__Id__c = ssot__WebsiteEngagement__dlm.SKU__c 
+                                       WHERE
+                                          isnotnull(ssot__GoodsProduct__dlm.Product_Name__c) 
+                                       GROUP BY
+                                          ssot__GoodsProduct__dlm.ssot__ProductSKU__c,
+                                          ssot__GoodsProduct__dlm.Product_Name__c,
+                                          ssot__GoodsProduct__dlm.Category__c,
+                                          ssot__GoodsProduct__dlm.Subcategory__c,
+                                          ssot__GoodsProduct__dlm.ssot__BrandId__c 
+                                    )
+                                    as sub1 
+                                 GROUP BY
+                                    sub1.Product_SKU__c,
+                                    sub1.Product_Name__c,
+                                    sub1.Product_Category__c,
+                                    sub1.Product_Subcategory__c,
+                                    sub1.Brand__c 
+                              )
+                              as WebEngagementsub 
+                              FULL JOIN
+                                 (
+                                    SELECT
+                                       sub1.Product_Name__c as Product_Name__c,
+                                       sub1.Product_Category__c as Product_Category__c,
+                                       sub1.Product_Subcategory__c as Product_Subcategory__c,
+                                       sub1.Brand__c as Brand__c,
+                                       sub1.Product_SKU__c as Product_SKU__c,
+                                       SUM( 
+                                       CASE
+                                          when
+                                             isnull(sub1.Engagement_Recency__c) 
+                                          then
+                                             0 
+                                          else
+                                             sub1.Engagement_Recency__c 
+                                       end
+) as Mobile_Engagement_Recency__c, SUM( 
+                                       CASE
+                                          when
+                                             isnull(sub1.Engagement_Frequency__c) 
+                                          then
+                                             0 
+                                          else
+                                             sub1.Engagement_Frequency__c 
+                                       end
+) as Mobile_Engagement_Frequency__c, SUM( 
+                                       CASE
+                                          when
+                                             isnull(sub1.Engagement_Monetary__c) 
+                                          then
+                                             0 
+                                          else
+                                             sub1.Engagement_Monetary__c 
+                                       end
+) as Mobile_Engagement_Monetary__c 
+                                    FROM
+                                       (
+                                          SELECT
+                                             ssot__GoodsProduct__dlm.ssot__ProductSKU__c as Product_SKU__c,
+                                             ssot__GoodsProduct__dlm.Product_Name__c as Product_Name__c,
+                                             ssot__GoodsProduct__dlm.Category__c as Product_Category__c,
+                                             ssot__GoodsProduct__dlm.Subcategory__c as Product_Subcategory__c,
+                                             ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c,
+                                             MIN(DATEDIFF(CURRENT_DATE(), ssot__DeviceApplicationEngagement__dlm.ssot__EngagementDateTm__c)) as Engagement_Recency__c,
+                                             COUNT(ssot__DeviceApplicationEngagement__dlm.ssot__IndividualId__c) as Engagement_Frequency__c,
+                                             SUM(ssot__GoodsProduct__dlm.Regular_Price__c) as Engagement_Monetary__c 
+                                          FROM
+                                             ssot__GoodsProduct__dlm 
+                                             LEFT JOIN
+                                                ssot__DeviceApplicationEngagement__dlm 
+                                                ON ssot__GoodsProduct__dlm.ssot__Id__c = ssot__DeviceApplicationEngagement__dlm.sku__c 
+                                          WHERE
+                                             isnotnull(ssot__GoodsProduct__dlm.Product_Name__c) 
+                                          GROUP BY
+                                             ssot__GoodsProduct__dlm.ssot__ProductSKU__c,
+                                             ssot__GoodsProduct__dlm.Product_Name__c,
+                                             ssot__GoodsProduct__dlm.Category__c,
+                                             ssot__GoodsProduct__dlm.Subcategory__c,
+                                             ssot__GoodsProduct__dlm.ssot__BrandId__c 
+                                       )
+                                       as sub1 
+                                    GROUP BY
+                                       sub1.Product_Name__c,
+                                       sub1.Product_SKU__c,
+                                       sub1.Product_Category__c,
+                                       sub1.Product_Subcategory__c,
+                                       sub1.Brand__c 
+                                 )
+                                 as MobileEngagementsub 
+                                 ON WebEngagementsub.Product_SKU__c = MobileEngagementsub.Product_SKU__c 
+                              FULL JOIN
+                                 (
+                                    SELECT
+                                       sub1.Product_Name__c as Product_Name__c,
+                                       sub1.Product_Category__c as Product_Category__c,
+                                       sub1.Product_Subcategory__c as Product_Subcategory__c,
+                                       sub1.Brand__c as Brand__c,
+                                       sub1.Product_SKU__c as Product_SKU__c,
+                                       SUM( 
+                                       CASE
+                                          when
+                                             isnull(sub1.Purchase_Recency__c) 
+                                          then
+                                             0 
+                                          else
+                                             sub1.Purchase_Recency__c 
+                                       end
+) as Purchase_Recency__c, SUM( 
+                                       CASE
+                                          when
+                                             isnull(sub1.Purchase_Frequency__c) 
+                                          then
+                                             0 
+                                          else
+                                             sub1.Purchase_Frequency__c 
+                                       end
+) as Purchase_Frequency__c, SUM( 
+                                       CASE
+                                          when
+                                             isnull(sub1.Purchase_Monetary__c) 
+                                          then
+                                             0 
+                                          else
+                                             sub1.Purchase_Monetary__c 
+                                       end
+) as Purchase_Monetary__c 
+                                    FROM
+                                       (
+                                          SELECT
+                                             ssot__GoodsProduct__dlm.Product_Name__c as Product_Name__c,
+                                             ssot__GoodsProduct__dlm.Category__c as Product_Category__c,
+                                             ssot__GoodsProduct__dlm.Subcategory__c as Product_Subcategory__c,
+                                             ssot__GoodsProduct__dlm.ssot__BrandId__c as Brand__c,
+                                             ssot__GoodsProduct__dlm.ssot__ProductSKU__c as Product_SKU__c,
+                                             MIN(DATEDIFF(CURRENT_DATE(), ssot__SalesOrder__dlm.ssot__PurchaseOrderDate__c)) as Purchase_Recency__c,
+                                             COUNT(ssot__SalesOrder__dlm.ssot__Id__c) as Purchase_Frequency__c,
+                                             SUM(ssot__SalesOrder__dlm.ssot__GrandTotalAmount__c) as Purchase_Monetary__c 
+                                          FROM
+                                             ssot__GoodsProduct__dlm 
+                                             FULL JOIN
+                                                ssot__SalesOrderProduct__dlm 
+                                                ON ssot__GoodsProduct__dlm.ssot__Id__c = ssot__SalesOrderProduct__dlm.ssot__ProductId__c 
+                                             LEFT JOIN
+                                                ssot__SalesOrder__dlm 
+                                                ON ssot__SalesOrderProduct__dlm.ssot__SalesOrderId__c = ssot__SalesOrder__dlm.ssot__Id__c 
+                                          WHERE
+                                             isnotnull(ssot__GoodsProduct__dlm.Product_Name__c) 
+                                          GROUP BY
+                                             ssot__GoodsProduct__dlm.ssot__ProductSKU__c,
+                                             ssot__GoodsProduct__dlm.Product_Name__c,
+                                             ssot__GoodsProduct__dlm.Category__c,
+                                             ssot__GoodsProduct__dlm.Subcategory__c,
+                                             ssot__GoodsProduct__dlm.ssot__BrandId__c 
+                                       )
+                                       as sub1 
+                                    GROUP BY
+                                       sub1.Product_SKU__c,
+                                       sub1.Product_Name__c,
+                                       sub1.Product_Category__c,
+                                       sub1.Product_Subcategory__c,
+                                       sub1.Brand__c 
+                                 )
+                                 as Purchasesub 
+                                 ON WebEngagementsub.Product_SKU__c = Purchasesub.Product_SKU__c 
+                           GROUP BY
+                              WebEngagementsub.Product_SKU__c,
+                              WebEngagementsub.Product_Name__c,
+                              WebEngagementsub.Product_Category__c,
+                              WebEngagementsub.Product_Subcategory__c,
+                              WebEngagementsub.Brand__c 
+                        )
+                        as outersub1 
+                     GROUP BY
+                        outersub1.Product_SKU__c,
+                        outersub1.Product_Name__c,
+                        outersub1.Product_Category__c,
+                        outersub1.Product_Subcategory__c,
+                        outersub1.Brand__c 
+                  )
+                  as totalMaxsub 
+            )
+            AS totalMax 
+            ON productScore.Product_SKU__c <> '' 
+            AND totalMax.Recency__c <> - 1000 
+      GROUP BY
+         productScore.Product_SKU__c,
+         productScore.Product_Name__c,
+         productScore.Product_Category__c,
+         productScore.Product_Subcategory__c,
+         productScore.Brand__c
+   )
+   as finalsub1 
+GROUP BY
+   Product_SKU__c,
+   Product_Name__c,
+   Product_Category__c,
+   Product_Subcategory__c,
+   Brand__c,
+   RF_Product_Cluster__c,
+   RM_Product_Cluster__c,
+   FM_Product_Cluster__c
