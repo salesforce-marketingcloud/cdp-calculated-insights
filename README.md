@@ -38,6 +38,7 @@ Attached is a PDF file called "Data Schema" that shows the data relationships fo
 * Email Engagement Customer Buckets for Each Unified Individual
 * Social Channel Affinity for Each Unified Individual
 * Web, Mobile, and Email Engagement Scores (3 Queries)
+* Beyond People Product Clusters_Analytics (see attached file)
 
 
 ***Example Queries***
@@ -1452,4 +1453,28 @@ FROM
     AND totalMax.totalmaxemailengagementcount__c <> - 1000 
 Group by
   Unified_Individual__c
+```
+
+**Beyond People Product Clusters_Analytics - Calculated Insight Query**
+
+*Creates dimensions for each combination of Recency, Frequency, and Monetary (RFM) and their corresponding product cluster names as well as product related dimensions such as Product SKU and Product Category. Creates measures R, F, and M for Purchase and Engagement data separately that are averaged together to get the R, F, and M values and then divided by the max score for all Product SKUs to get the R, F, and M Scores. Important note: Unlike many of the other queries in this repository, the Beyond People query here is grouped by Product_SKU instead of Unified Individual.*
+
+*This query corresponds to the data schema in the attached PDF  
+
+| Measure                | Dimensions            |
+| -----------            | -----------           |
+| Recency_Score__c       | RF_Product_Cluster__c |
+| Frequency_Score__c     | FM_Product_Cluster__c |
+| Monetary_Score__c      | RM_Product_Cluster__c |
+| Recency__c             | Product_SKU__c        |
+| Frequency__c           | Product_Name__c       |
+| Monetary__c            | Product_Category__c   |
+| Purchase_Recency__c    | Product_Subcategory__c|
+| Purchase_Frequency__c  | Brand__c              |
+| Purchase_Monetary__c   |                       |
+| Engagement_Recency__c  |                       |
+| Engagement_Frequency__c|                       |
+| Engagement_Monetary__c |                       |
+
+*Query is located in the attached file*
 ```
