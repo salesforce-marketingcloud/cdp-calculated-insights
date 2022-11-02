@@ -1455,7 +1455,7 @@ Group by
   Unified_Individual__c
 ```
 
-**Beyond People Product Clusters_Analytics - Calculated Insight Query**
+**Beyond People Product Clusters_Analytics**
 
 *Creates dimensions for each combination of Recency, Frequency, and Monetary (RFM) and their corresponding product cluster names as well as product related dimensions such as Product SKU and Product Category. Creates measures R, F, and M for Purchase and Engagement data separately that are averaged together to get the R, F, and M values and then divided by the max score for all Product SKUs to get the R, F, and M Scores. Important note: Unlike many of the other queries in this repository, the Beyond People query here is grouped by Product_SKU instead of Unified Individual.*
 
@@ -1477,6 +1477,6 @@ Group by
 | Engagement_Monetary__c |                       |
 
 ```
-Query is located in the attached file
+Query is located in the attached file called "Beyond People Product Clusters_Analytics - Calculated Insight Query"
 ```
 
